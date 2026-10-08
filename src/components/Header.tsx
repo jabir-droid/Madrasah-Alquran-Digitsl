@@ -142,7 +142,16 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
     }
   };
 
-  const { gregText, hijriText } = getHeaderDates();
+  const [mounted, setMounted] = useState(false);
+  const [headerDates, setHeaderDates] = useState({
+    gregText: "Kamis, 08 Oktober 2026 M",
+    hijriText: "27 Robi'ul Akhir 1448 H"
+  });
+
+  useEffect(() => {
+    setMounted(true);
+    setHeaderDates(getHeaderDates());
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -168,27 +177,27 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
           </button>
         )}
 
-        <div className="flex items-center gap-2.5 bg-white/90 border border-slate-200/90 px-3 py-1.5 rounded-2xl shadow-2xs">
+        <div className="flex items-center gap-2.5 bg-white/90 border border-slate-200/90 px-3 py-1.5 rounded-2xl shadow-2xs" suppressHydrationWarning>
           <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0">
             <Calendar size={15} className="stroke-[2.2]" />
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs" suppressHydrationWarning>
             <span className="font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
-              {gregText}
+              {headerDates.gregText}
             </span>
             <span className="text-slate-300 font-bold">/</span>
             <span className="font-bold text-emerald-800 whitespace-nowrap">
-              {hijriText}
+              {headerDates.hijriText}
             </span>
           </div>
         </div>
       </div>
 
       {/* Center: Live Real-Time Clock */}
-      <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+      <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs" suppressHydrationWarning>
         <Clock size={15} className="text-emerald-700 animate-pulse shrink-0" />
-        <span className="font-mono text-xs sm:text-[13px] font-black text-slate-800 tracking-wider tabular-nums">
-          {currentTime || "10:44:00"}
+        <span className="font-mono text-xs sm:text-[13px] font-black text-slate-800 tracking-wider tabular-nums" suppressHydrationWarning>
+          {currentTime || "18:58:24"}
         </span>
         <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/70">
           WIB

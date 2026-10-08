@@ -584,12 +584,12 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
               {/* Left Side: Greeting & Status */}
               <div className="space-y-1.5 max-w-xl">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[10px] font-semibold text-emerald-100 border border-white/20 shadow-2xs mb-0.5">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[10px] font-semibold text-emerald-100 border border-white/20 shadow-2xs mb-0.5" suppressHydrationWarning>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
                   Ruang Kerja Dakwah & Madrasah {currentUser?.roleLabel ? `• ${currentUser.roleLabel}` : ""}
                 </div>
                 
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-xs">
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-xs" suppressHydrationWarning>
                   Assalamu&apos;alaikum, {currentUser?.name || "Sahabat"}! <span className="text-xl">✨</span>
                 </h2>
                 
