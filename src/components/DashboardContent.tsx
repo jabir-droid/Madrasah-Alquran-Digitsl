@@ -1,0 +1,1567 @@
+"use client";
+
+import { 
+  BookOpen, CheckCircle2, Award, ChevronLeft, ChevronRight, 
+  ArrowRight, ArrowUpRight, Clock, Calendar, FileText, X, Plus, 
+  KanbanSquare, GraduationCap, ChevronDown, ChevronUp, Sparkles, RefreshCw,
+  SlidersHorizontal, Trash2, RotateCcw, Check, Trophy, Flame, Crown, Medal, CheckSquare
+} from "lucide-react";
+import { useAppContext } from "@/context/AppContext";
+import { useState, useEffect } from "react";
+import { getMemberAvatar } from "@/utils/avatar";
+
+interface DashboardContentProps {
+  setActiveTab?: (tab: string) => void;
+  onOpenGuide?: () => void;
+}
+
+const DEFAULT_HADITH_QUOTES = [
+  {
+    arabic: "بَلِّغُوا عَنِّي وَلَوْ آيَةً",
+    translation: "Sampaikanlah dariku walau hanya satu ayat.",
+    source: "HR. Al-Bukhari no. 3461",
+    theme: "Amanah Dakwah"
+  },
+  {
+    arabic: "مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ",
+    translation: "Barangsiapa menunjukkan kepada kebaikan, baginya pahala semisal orang yang mengerjakannya.",
+    source: "HR. Muslim no. 1893",
+    theme: "Pahala Jariyah"
+  },
+  {
+    arabic: "أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ",
+    translation: "Amalan yang paling dicintai Allah adalah yang terus-menerus (istiqomah) walaupun sedikit.",
+    source: "HR. Al-Bukhari & Muslim",
+    theme: "Istiqomah Tim"
+  },
+  {
+    arabic: "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",
+    translation: "Sebaik-baik kalian adalah orang yang mempelajari Al-Qur'an dan mengajarkannya.",
+    source: "HR. Al-Bukhari no. 5027",
+    theme: "Kemuliaan Al-Qur'an"
+  },
+  {
+    arabic: "إِنَّ اللَّهَ يُحِبُّ إِذَا عَمِلَ أَحَدُكُمْ عَمَلاً أَنْ يُتْقِنَهُ",
+    translation: "Sesungguhnya Allah menyukai jika seseorang di antara kalian melakukan suatu pekerjaan, ia melakukannya secara itqan (profesional & sungguh-sungguh).",
+    source: "HR. Al-Baihaqi",
+    theme: "Itqan & Profesional"
+  },
+  {
+    arabic: "يَسِّرُوا وَلاَ تُعَسِّرُوا، وَبَشِّرُوا وَلاَ تُنَفِّرُوا",
+    translation: "Permudahlah dan jangan mempersulit, berilah kabar gembira dan jangan membuat orang berpaling menjauh.",
+    source: "HR. Al-Bukhari no. 69",
+    theme: "Hikmah Dakwah"
+  }
+];
+
+export default function DashboardContent({ setActiveTab, onOpenGuide }: DashboardContentProps) {
+  const { data, currentUser } = useAppContext();
+  const [calMonth, setCalMonth] = useState(9); // 0-indexed, 9 = Oktober
+  const [calYear, setCalYear] = useState(2026);
+  const [selectedDay, setSelectedDay] = useState(8);
+  const [showActivityLog, setShowActivityLog] = useState(false);
+  const [activityTab, setActivityTab] = useState<'today'|'all'>('today');
+  const [showAllMembers, setShowAllMembers] = useState(false);
+  
+  // Hadits & Weekly Target State with Local Storage persistence
+  const [hadithList, setHadithList] = useState(DEFAULT_HADITH_QUOTES);
+  const [hadithIndex, setHadithIndex] = useState(0);
+  const [targetWeek, setTargetWeek] = useState(5);
+  const [showHadithModal, setShowHadithModal] = useState(false);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newArabic, setNewArabic] = useState("");
+  const [newTranslation, setNewTranslation] = useState("");
+  const [newSource, setNewSource] = useState("");
+  const [newTheme, setNewTheme] = useState("");
+
+  useEffect(() => {
+    try {
+      const savedQuotes = localStorage.getItem("mqd_hadiths");
+      if (savedQuotes) {
+        const parsed = JSON.parse(savedQuotes);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setHadithList(parsed);
+        }
+      }
+      const savedTarget = localStorage.getItem("mqd_target_week");
+      if (savedTarget) {
+        setTargetWeek(Number(savedTarget) || 5);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  // Real-time synchronization when profile avatar is updated
+  const [avatarTick, setAvatarTick] = useState(0);
+
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      setAvatarTick(prev => prev + 1);
+    };
+    window.addEventListener("mqd_profile_updated", handleAvatarUpdate);
+    window.addEventListener("storage", handleAvatarUpdate);
+    return () => {
+      window.removeEventListener("mqd_profile_updated", handleAvatarUpdate);
+      window.removeEventListener("storage", handleAvatarUpdate);
+    };
+  }, []);
+
+  const activeHadith = hadithList[hadithIndex] || hadithList[0] || DEFAULT_HADITH_QUOTES[0];
+
+  const handleSaveTarget = (val: number) => {
+    const num = Math.max(1, val);
+    setTargetWeek(num);
+    try {
+      localStorage.setItem("mqd_target_week", String(num));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddHadith = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArabic.trim() || !newTranslation.trim()) return;
+    const item = {
+      arabic: newArabic.trim(),
+      translation: newTranslation.trim(),
+      source: newSource.trim() || "Kutipan Hadits",
+      theme: newTheme.trim() || "Mutiara Hikmah"
+    };
+    const updated = [...hadithList, item];
+    setHadithList(updated);
+    setHadithIndex(updated.length - 1);
+    try {
+      localStorage.setItem("mqd_hadiths", JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setNewArabic("");
+    setNewTranslation("");
+    setNewSource("");
+    setNewTheme("");
+    setIsAddingNew(false);
+  };
+
+  const handleDeleteHadith = (indexToDelete: number) => {
+    if (hadithList.length <= 1) return;
+    const updated = hadithList.filter((_, idx) => idx !== indexToDelete);
+    setHadithList(updated);
+    if (hadithIndex >= updated.length) {
+      setHadithIndex(0);
+    }
+    try {
+      localStorage.setItem("mqd_hadiths", JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleResetToDefault = () => {
+    setHadithList(DEFAULT_HADITH_QUOTES);
+    setHadithIndex(0);
+    setTargetWeek(5);
+    try {
+      localStorage.removeItem("mqd_hadiths");
+      localStorage.removeItem("mqd_target_week");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const cards = data.cards || [];
+  const members = data.members || [];
+  const contents = data.contents || [];
+
+  const publishedThisWeek = contents.filter(c => !c.deleted && c.status === "published").length || 3;
+  const targetPercent = Math.min(100, Math.round((publishedThisWeek / targetWeek) * 100));
+
+  // Real Metrics from actual data
+  const totalTasks = cards.filter(c => !c.deleted).length;
+  const doneTasks = cards.filter(c => !c.deleted && c.columnId === "c_2").length;
+  const inProgressTasks = cards.filter(c => !c.deleted && c.columnId === "c_1");
+  const inProgressCount = inProgressTasks.length;
+  const notStartedCount = Math.max(0, totalTasks - doneTasks - inProgressCount);
+  const activeTasksCount = totalTasks - doneTasks; // To Do + Doing
+  const percentDone = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+  // Real Priority Breakdown stats from actual data
+  const highPriorityCount = cards.filter(c => !c.deleted && c.priority === "high").length;
+  const normalPriorityCount = cards.filter(c => !c.deleted && (c.priority === "normal" || !c.priority)).length;
+  const lowPriorityCount = cards.filter(c => !c.deleted && c.priority === "low").length;
+  const totalPriorityCount = highPriorityCount + normalPriorityCount + lowPriorityCount;
+
+  const highPercent = totalPriorityCount ? Math.round((highPriorityCount / totalPriorityCount) * 100) : 0;
+  const normalPercent = totalPriorityCount ? Math.round((normalPriorityCount / totalPriorityCount) * 100) : 0;
+  const lowPercent = totalPriorityCount ? Math.round((lowPriorityCount / totalPriorityCount) * 100) : 0;
+
+  // Dynamic Premium Calendar State & Computation
+  const MONTH_NAMES = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+  const DAYS_OF_WEEK = [
+    { short: "Ahad", full: "Ahad", isSunday: true, isFriday: false },
+    { short: "Sen", full: "Senin", isSunday: false, isFriday: false },
+    { short: "Sel", full: "Selasa", isSunday: false, isFriday: false },
+    { short: "Rab", full: "Rabu", isSunday: false, isFriday: false },
+    { short: "Kam", full: "Kamis", isSunday: false, isFriday: false },
+    { short: "Jum", full: "Jum'at", isSunday: false, isFriday: true },
+    { short: "Sab", full: "Sabtu", isSunday: false, isFriday: false }
+  ];
+
+  const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay(); // 0 is Sunday
+  const totalDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const totalDaysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+
+  const prevMonthIndex = calMonth === 0 ? 11 : calMonth - 1;
+  const prevYear = calMonth === 0 ? calYear - 1 : calYear;
+  const nextMonthIndex = calMonth === 11 ? 0 : calMonth + 1;
+  const nextYear = calMonth === 11 ? calYear + 1 : calYear;
+
+  const prevMonthCells = Array.from({ length: firstDayOfWeek }, (_, i) => ({
+    day: totalDaysInPrevMonth - firstDayOfWeek + 1 + i,
+    current: false,
+    month: prevMonthIndex,
+    year: prevYear
+  }));
+
+  const currentMonthCells = Array.from({ length: totalDaysInMonth }, (_, i) => ({
+    day: i + 1,
+    current: true,
+    month: calMonth,
+    year: calYear
+  }));
+
+  const totalDisplayed = prevMonthCells.length + currentMonthCells.length;
+  const remainingCellsCount = (7 - (totalDisplayed % 7)) % 7;
+  const nextMonthCells = Array.from({ length: remainingCellsCount }, (_, i) => ({
+    day: i + 1,
+    current: false,
+    month: nextMonthIndex,
+    year: nextYear
+  }));
+
+  const calendarDays = [...prevMonthCells, ...currentMonthCells, ...nextMonthCells];
+
+  // Arabic Digits Converter (Kemenag Style: ١, ٢, ٣, ...)
+  const toArabicDigits = (num: number | string) => {
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return String(num).replace(/[0-9]/g, (w) => arabicDigits[+w]);
+  };
+
+  const getHijriDayNumber = (year: number, month: number, day: number) => {
+    try {
+      const dt = new Date(year, month, day);
+      const parts = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+        day: 'numeric'
+      }).formatToParts(dt);
+      return parts.find(p => p.type === 'day')?.value || String(day);
+    } catch (e) {
+      return String(day);
+    }
+  };
+
+  const normalizeHijriMonthName = (rawMonth: string) => {
+    const lower = (rawMonth || "").toLowerCase().trim();
+    if (lower.includes("rabiulakhir") || lower.includes("rab. akhir") || lower.includes("rabi'ul akhir") || lower.includes("thani")) {
+      return "Rabi'ul Akhir";
+    }
+    if (lower.includes("rabiulawal") || lower.includes("rab. awal") || lower.includes("rabi'ul awal") || lower.includes("awwal")) {
+      return "Rabi'ul Awwal";
+    }
+    if (lower.includes("jumadilawal") || lower.includes("jum. awal") || lower.includes("jumada al-awwal") || lower.includes("jumadil ula")) {
+      return "Jumadil Ula";
+    }
+    if (lower.includes("jumadilakhir") || lower.includes("jum. akhir") || lower.includes("jumada al-thani") || lower.includes("jumadil tsani")) {
+      return "Jumadits Tsani";
+    }
+    if (lower.includes("muharam") || lower.includes("muharram")) return "Muharram";
+    if (lower.includes("safar")) return "Safar";
+    if (lower.includes("rajab")) return "Rajab";
+    if (lower.includes("syakban") || lower.includes("sha'ban")) return "Sya'ban";
+    if (lower.includes("ramadan") || lower.includes("ramadhan")) return "Ramadhan";
+    if (lower.includes("syawal") || lower.includes("shawwal")) return "Syawwal";
+    if (lower.includes("zulkaidah") || lower.includes("dzulqa'dah")) return "Dzulqa'dah";
+    if (lower.includes("zulhijah") || lower.includes("dzulhijjah")) return "Dzulhijjah";
+    return rawMonth;
+  };
+
+  const getHijriMonthRange = (year: number, month: number) => {
+    try {
+      const d1 = new Date(year, month, 1);
+      const dLast = new Date(year, month + 1, 0);
+      const f = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', { month: 'long', year: 'numeric' });
+      const p1 = f.formatToParts(d1);
+      const p2 = f.formatToParts(dLast);
+      const m1 = normalizeHijriMonthName(p1.find(p => p.type === 'month')?.value || '');
+      const m2 = normalizeHijriMonthName(p2.find(p => p.type === 'month')?.value || '');
+      const yr = p2.find(p => p.type === 'year')?.value || '1448';
+      if (m1 === m2) {
+        return `${m1} ${yr} H`;
+      }
+      return `${m1} – ${m2} ${yr} H`;
+    } catch (e) {
+      return "Rabi'ul Akhir – Jumadil Ula 1448 H";
+    }
+  };
+
+  const getHijriFullDate = (year: number, month: number, day: number) => {
+    try {
+      const dt = new Date(year, month, day);
+      const parts = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).formatToParts(dt);
+      const hDay = parts.find(p => p.type === 'day')?.value || '';
+      const rawMonth = parts.find(p => p.type === 'month')?.value || '';
+      const hYear = parts.find(p => p.type === 'year')?.value || '1448';
+      const cleanMonth = normalizeHijriMonthName(rawMonth);
+      return `${hDay} ${cleanMonth} ${hYear} H`;
+    } catch (e) {
+      return `${day} Rabi'ul Akhir 1448 H`;
+    }
+  };
+
+  const hijriMonthHeader = getHijriMonthRange(calYear, calMonth);
+  const selectedHijriFull = getHijriFullDate(calYear, calMonth, selectedDay);
+
+  const getHijriArabicTitle = (year: number, month: number) => {
+    if (year === 2026 && month === 9) {
+      return "ربيع الآخر – جمادى الأولى ١٤٤٨ هـ";
+    }
+    const arabicMonths: Record<string, string> = {
+      "Muharram": "المحرّم",
+      "Safar": "صفر",
+      "Rabi'ul Awwal": "ربيع الأول",
+      "Rabi'ul Akhir": "ربيع الآخر",
+      "Jumadil Ula": "جمادى الأولى",
+      "Jumadits Tsani": "جمادى الآخرة",
+      "Rajab": "رجب",
+      "Sya'ban": "شعبان",
+      "Ramadhan": "رمضان",
+      "Syawwal": "شوّال",
+      "Dzulqa'dah": "ذو القعدة",
+      "Dzulhijjah": "ذو الحجة"
+    };
+    try {
+      const d1 = new Date(year, month, 1);
+      const dLast = new Date(year, month + 1, 0);
+      const f = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', { month: 'long', year: 'numeric' });
+      const p1 = f.formatToParts(d1);
+      const p2 = f.formatToParts(dLast);
+      const m1 = normalizeHijriMonthName(p1.find(p => p.type === 'month')?.value || '');
+      const m2 = normalizeHijriMonthName(p2.find(p => p.type === 'month')?.value || '');
+      const yr = p2.find(p => p.type === 'year')?.value || '1448';
+      const arM1 = arabicMonths[m1] || m1;
+      const arM2 = arabicMonths[m2] || m2;
+      const arYr = toArabicDigits(yr);
+      if (m1 === m2) {
+        return `${arM1} ${arYr} هـ`;
+      }
+      return `${arM1} – ${arM2} ${arYr} هـ`;
+    } catch (e) {
+      return "ربيع الآخر – جمادى الأولى ١٤٤٨ هـ";
+    }
+  };
+
+  const handlePrevMonth = () => {
+    if (calMonth === 0) {
+      setCalMonth(11);
+      setCalYear(y => y - 1);
+    } else {
+      setCalMonth(m => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calMonth === 11) {
+      setCalMonth(0);
+      setCalYear(y => y + 1);
+    } else {
+      setCalMonth(m => m + 1);
+    }
+  };
+
+  const handleJumpToday = () => {
+    setCalMonth(9);
+    setCalYear(2026);
+    setSelectedDay(8);
+  };
+
+  const selectedDateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+  const selectedDateObj = new Date(calYear, calMonth, selectedDay);
+  const selectedDayName = DAYS_OF_WEEK[selectedDateObj.getDay()]?.full || "Hari";
+
+  // Match tasks with selected date
+  const tasksOnSelectedDate = cards.filter(c => {
+    if (c.deleted) return false;
+    if (c.dueDate === selectedDateStr) return true;
+    if (!c.dueDate && c.month === `${calYear}-${String(calMonth + 1).padStart(2, "0")}` && selectedDay === 8) {
+      return true;
+    }
+    return false;
+  });
+
+  const getTasksForDay = (day: number, isCurrent: boolean) => {
+    if (!isCurrent) return [];
+    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return cards.filter(c => {
+      if (c.deleted) return false;
+      if (c.dueDate === dateStr) return true;
+      if (!c.dueDate && c.month === `${calYear}-${String(calMonth + 1).padStart(2, "0")}` && day === 8) return true;
+      return false;
+    });
+  };
+
+  // Recent activities from actual cards
+  const recentActivities = cards
+    .filter(c => !c.deleted)
+    .sort((a,b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
+    .slice(0, 3);
+
+  // Dynamic & 100% Accurate Member Performance breakdown directly from data.members & data.cards
+  const registeredMembers = [...members];
+  const registeredMemberIds = new Set(registeredMembers.map(m => m.id));
+
+  // Include assignees from cards if not explicitly in data.members
+  cards.forEach(c => {
+    if (c.assigneeId && !registeredMemberIds.has(c.assigneeId)) {
+      const cleanName = c.assigneeId.startsWith("u_") 
+        ? c.assigneeId.slice(2).charAt(0).toUpperCase() + c.assigneeId.slice(3) 
+        : c.assigneeId;
+      registeredMembers.push({
+        id: c.assigneeId,
+        name: cleanName,
+        role: "Anggota Tim",
+      });
+      registeredMemberIds.add(c.assigneeId);
+    }
+  });
+
+  const memberPerformanceList = registeredMembers.map((member, idx) => {
+    const memberCards = cards.filter(c => 
+      !c.deleted && (
+        c.assigneeId === member.id || 
+        c.assigneeId === member.name ||
+        (c.assigneeId && member.id && c.assigneeId.toLowerCase() === member.id.toLowerCase())
+      )
+    );
+
+    const selesai = memberCards.filter(c => c.columnId === "c_2").length;
+    const belum = memberCards.filter(c => c.columnId !== "c_2").length;
+    const total = selesai + belum;
+    const rasio = total > 0 ? Math.round((selesai / total) * 100) : 0;
+
+    const initials = (member.name || "U")
+      .trim()
+      .split(/\s+/)
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+
+    const avatarColors = [
+      "bg-[#10b981]", "bg-[#3b82f6]", "bg-[#8b5cf6]", "bg-[#f59e0b]", 
+      "bg-[#ec4899]", "bg-[#06b6d4]", "bg-[#f43f5e]", "bg-[#14b8a6]"
+    ];
+
+    return {
+      id: member.id,
+      name: member.name,
+      role: member.role || "Anggota Tim",
+      initials: initials || "U",
+      avatarBg: avatarColors[idx % avatarColors.length],
+      avatarUrl: getMemberAvatar(member.id) || getMemberAvatar(member.name),
+      selesai,
+      belum,
+      total,
+      rasio,
+    };
+  })
+  // Sort so members with tasks appear on top, sorted by total descending then selesai descending
+  .sort((a, b) => b.total - a.total || b.selesai - a.selesai);
+
+  // Number of members to display
+  const activeMembersCount = memberPerformanceList.filter(m => m.total > 0).length;
+  const initialDisplayCount = Math.max(4, activeMembersCount);
+  const displayedMembers = showAllMembers 
+    ? memberPerformanceList 
+    : memberPerformanceList.slice(0, initialDisplayCount);
+
+  // Leaderboard: Top Anggota Paling Rajin (Semua Anggota Diurutkan dari yang Paling Rajin)
+  const topRajinMembers = registeredMembers.map((member, idx) => {
+    const memberCards = cards.filter(c => 
+      !c.deleted && (
+        c.assigneeId === member.id || 
+        c.assigneeId === member.name ||
+        (c.assigneeId && member.name && c.assigneeId.toLowerCase() === member.name.toLowerCase()) ||
+        (c.assigneeId && member.id && c.assigneeId.toLowerCase() === member.id.toLowerCase())
+      )
+    );
+
+    const rawSelesai = memberCards.filter(c => c.columnId === "c_2").length;
+    const rawChecklist = memberCards.reduce((acc, c) => 
+      acc + (c.checklist ? c.checklist.filter((cl: any) => cl.done).length : 0), 0
+    );
+    const totalChecklist = memberCards.reduce((acc, c) => 
+      acc + (c.checklist ? c.checklist.length : 0), 0
+    );
+    const totalTugas = memberCards.length;
+
+    // Real dynamic calculation:
+    const tugasSelesai = rawSelesai;
+    const checklistCount = rawChecklist;
+
+    // Formula pts murni berdasarkan kerja nyata:
+    // 15 pts per tugas selesai + 3 pts per checklist selesai + 2 pts per keaktifan tugas
+    const pts = (tugasSelesai * 15) + (checklistCount * 3) + (totalTugas * 2);
+
+    const initials = (member.name || "U")
+      .trim()
+      .split(/\s+/)
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+
+    const avatarColorMap: Record<string, string> = {
+      "u_numan": "bg-[#10b981]",
+      "u_ahmad": "bg-[#ec4899]",
+      "u_zakki": "bg-[#6366f1]",
+      "saifu design": "bg-[#8b5cf6]",
+    };
+    const avatarColors = [
+      "bg-[#10b981]", "bg-[#ec4899]", "bg-[#6366f1]", "bg-[#8b5cf6]", 
+      "bg-[#06b6d4]", "bg-[#f59e0b]", "bg-[#14b8a6]", "bg-[#3b82f6]"
+    ];
+    const avatarBg = avatarColorMap[member.id] || avatarColorMap[member.name.toLowerCase()] || avatarColors[idx % avatarColors.length];
+
+    return {
+      id: member.id,
+      name: member.name,
+      role: member.role || "Anggota Tim",
+      initials: initials || "U",
+      avatarBg,
+      avatarUrl: getMemberAvatar(member.id) || getMemberAvatar(member.name),
+      tugasSelesai,
+      totalTugas,
+      checklistCount,
+      totalChecklist,
+      pts,
+    };
+  })
+  // Sort descending: highest points first (paling rajin di atas)
+  .sort((a, b) => b.pts - a.pts || b.tugasSelesai - a.tugasSelesai || b.checklistCount - a.checklistCount);
+
+  // Dynamic benchmark calculation:
+  const maxPts = Math.max(...topRajinMembers.map(m => m.pts), 0);
+  const benchmarkPts = Math.max(maxPts, 10);
+
+  const displayedRajinMembers = showAllMembers 
+    ? topRajinMembers 
+    : topRajinMembers.slice(0, 4);
+
+  return (
+    <div className="pt-2 sm:pt-2.5 pb-6 px-4 sm:px-6 max-w-[1680px] mx-auto animate-in fade-in duration-300">
+      
+      {/* 2-Column Main Layout: Main Left (8 Cols) & Right Widgets (4 Cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-3.5 items-start">
+        
+        {/* ==================== LEFT MAIN CONTENT (8 Cols) ==================== */}
+        <div className="lg:col-span-8 space-y-2.5">
+          
+          {/* 1. TOP ROW: Full-Width Horizontal Banner (Roomier & Luxurious) */}
+          <div className="bg-gradient-to-r from-[#064e3b] via-[#047857] to-[#065f46] rounded-2xl p-4 sm:p-5 md:py-4.5 md:px-5.5 text-white relative overflow-hidden shadow-sm shadow-emerald-950/10 border border-emerald-700/50">
+            {/* Ambient Glows & Subtle Decorative Accents */}
+            <div className="absolute -right-8 -top-8 w-44 h-44 rounded-full bg-emerald-300/10 blur-3xl pointer-events-none" />
+            <div className="absolute left-1/3 -bottom-8 w-36 h-36 rounded-full bg-teal-200/10 blur-2xl pointer-events-none" />
+            <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none hidden md:block">
+              <Sparkles size={90} className="text-white rotate-12" />
+            </div>
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
+              {/* Left Side: Greeting & Status */}
+              <div className="space-y-1.5 max-w-xl">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[10px] font-semibold text-emerald-100 border border-white/20 shadow-2xs mb-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                  Ruang Kerja Dakwah & Madrasah {currentUser?.roleLabel ? `• ${currentUser.roleLabel}` : ""}
+                </div>
+                
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-xs">
+                  Assalamu&apos;alaikum, {currentUser?.name || "Sahabat"}! <span className="text-xl">✨</span>
+                </h2>
+                
+                <p className="text-xs sm:text-[13px] text-emerald-100/90 leading-relaxed font-normal">
+                  Pantau kelancaran tugas dakwah, materi kreatif, dan kontribusi seluruh anggota tim hari ini.
+                </p>
+              </div>
+
+              {/* Right Side: Clean Single Primary Action */}
+              <div className="shrink-0 flex items-center">
+                <button 
+                  onClick={() => setActiveTab?.('board')}
+                  className="bg-white hover:bg-emerald-50 text-emerald-950 text-xs sm:text-[13px] font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 group cursor-pointer active:scale-95 whitespace-nowrap"
+                >
+                  Buka Board 
+                  <ArrowRight size={15} className="group-hover:translate-x-1 text-emerald-700 transition-transform" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. STAT CARDS ROW: Compact, Sleek & Ergonomic Glassmorphism Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            
+            {/* Card 1: Tugas Aktif */}
+            <div 
+              onClick={() => setActiveTab?.('board')}
+              className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-blue-200 transition-all py-2.5 px-3.5 sm:py-3 sm:px-4 flex items-center justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <BookOpen size={17} />
+                </div>
+                <div>
+                  <span className="text-[11px] font-medium text-slate-400 block leading-tight">Tugas Aktif</span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{activeTasksCount}</span>
+                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                      Aktif
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </div>
+
+            {/* Card 2: Tugas Tuntas */}
+            <div 
+              onClick={() => setActiveTab?.('board')}
+              className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-200 transition-all py-2.5 px-3.5 sm:py-3 sm:px-4 flex items-center justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <CheckCircle2 size={17} />
+                </div>
+                <div>
+                  <span className="text-[11px] font-medium text-slate-400 block leading-tight">Tugas Selesai</span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{doneTasks}</span>
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                      Tuntas
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </div>
+
+            {/* Card 3: Materi Konten */}
+            <div 
+              onClick={() => setActiveTab?.('contents')}
+              className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-200 transition-all py-2.5 px-3.5 sm:py-3 sm:px-4 flex items-center justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/80 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <Award size={17} />
+                </div>
+                <div>
+                  <span className="text-[11px] font-medium text-slate-400 block leading-tight">Materi & Konten</span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{contents.filter(c => !c.deleted).length}</span>
+                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+                      Kreatif
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </div>
+
+          </div>
+
+
+          {/* 2. ROW 2: Progres Kerja Tim + Aktivitas Terbaru Tim */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+            
+            {/* Left Card: Progres Kerja Tim */}
+            <div className="md:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm mb-1">Progres Kerja Tim</h4>
+                <p className="text-[11px] text-slate-400 mb-4">Rasio penyelesaian seluruh tugas di ruang kerja</p>
+                
+                {/* Donut Chart Ring */}
+                <div className="flex items-center gap-5 my-2">
+                  <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path
+                        className="text-slate-100"
+                        strokeWidth="3.5"
+                        stroke="currentColor"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        className="text-[#10b981] transition-all duration-1000"
+                        strokeDasharray={`${percentDone}, 100`}
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        stroke="currentColor"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <div className="absolute text-center">
+                      <p className="text-xl font-black text-slate-800 leading-none">{percentDone}%</p>
+                      <p className="text-[9px] font-bold text-slate-400 mt-0.5">Total Capaian</p>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-[#10b981]"></span> Selesai
+                      </span>
+                      <strong className="text-slate-800">{doneTasks}</strong>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span> Sedang Jalan
+                      </span>
+                      <strong className="text-slate-800">{inProgressCount}</strong>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-slate-400 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-slate-300"></span> Belum Mulai
+                      </span>
+                      <strong className="text-slate-600">{notStartedCount}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Card: Aktivitas Terbaru Tim */}
+            <div className="md:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">Aktivitas Terbaru Tim</h4>
+                    <p className="text-[11px] text-slate-400">Pembaruan tugas & naskah secara realtime</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowActivityLog(true)}
+                    className="text-xs font-bold text-[#10b981] hover:text-[#059669] cursor-pointer"
+                  >
+                    Lihat Semua &rarr;
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {recentActivities.length === 0 ? (
+                    <div className="py-6 text-center text-slate-400 text-xs font-medium">Belum ada riwayat aktivitas terbaru.</div>
+                  ) : recentActivities.map((c, idx) => {
+                    const assignee = members.find(m => m.id === c.assigneeId);
+                    const isDone = c.columnId === "c_2";
+                    const actionText = isDone ? "menyelesaikan tugas" : "memperbarui tugas";
+
+                    return (
+                      <div key={c.id || idx} className="flex items-start justify-between gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-8 h-8 rounded-full ${isDone ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'} flex items-center justify-center shrink-0`}>
+                            {isDone ? <CheckCircle2 size={16} /> : <FileText size={16} />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">
+                              <span className="text-[#10b981] font-semibold">{assignee?.name || "Nu'man"}</span> {actionText}
+                            </p>
+                            <p className="text-[11px] text-slate-500 truncate">"{c.title}"</p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-semibold text-slate-400 shrink-0">Terbaru</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+
+          {/* SECTION: TOP ANGGOTA PALING RAJIN (LEADERBOARD LENGKAP SEMUA ANGGOTA) */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+            {/* Header Card */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-500 shadow-2xs">
+                  <Trophy size={18} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm sm:text-base leading-tight">
+                    Top Anggota Paling Rajin
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Peringkat produktivitas tim bulan ini
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 font-bold text-xs shadow-2xs">
+                  🏆 Leaderboard
+                </span>
+              </div>
+            </div>
+
+            {/* List of All Members Sorted by Diligence / Productivity */}
+            <div className="space-y-2.5">
+              {displayedRajinMembers.map((member, index) => {
+                const rank = index + 1;
+                const percent = Math.min(100, Math.round((member.pts / benchmarkPts) * 100));
+                const isRank1 = rank === 1;
+                const isRank2 = rank === 2;
+                const isRank3 = rank === 3;
+
+                return (
+                  <div
+                    key={member.id}
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-3.5 rounded-2xl transition-all ${
+                      isRank1
+                        ? "bg-amber-50/40 border border-amber-200/90 shadow-2xs"
+                        : "bg-white border border-slate-100 hover:border-slate-200 hover:bg-slate-50/40"
+                    }`}
+                  >
+                    {/* Left: Rank Badge + Avatar + Name + Checklists */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Rank Box */}
+                      <div
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 border ${
+                          isRank1
+                            ? "bg-amber-100/90 border-amber-300 text-amber-900"
+                            : isRank2
+                            ? "bg-slate-100 border-slate-300 text-slate-700"
+                            : isRank3
+                            ? "bg-amber-50 border-amber-200 text-amber-800"
+                            : "bg-slate-50 border-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {rank}
+                      </div>
+
+                      {/* Avatar */}
+                      <div
+                        className={`w-9 h-9 rounded-full ${member.avatarBg} text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs overflow-hidden relative border border-slate-200/60`}
+                      >
+                        {member.avatarUrl ? (
+                          <img
+                            src={member.avatarUrl}
+                            alt={member.name}
+                            className="w-full h-full object-cover object-center"
+                          />
+                        ) : (
+                          member.initials
+                        )}
+                      </div>
+
+                      {/* Name & Stats Line */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900 text-sm truncate">
+                            {member.name}
+                          </span>
+                          {isRank1 && <span className="text-sm">🏆</span>}
+                          {isRank2 && <span className="text-sm">🥈</span>}
+                          {isRank3 && <span className="text-sm">🥉</span>}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mt-0.5">
+                          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50/60 px-1.5 py-0.2 rounded">
+                            <CheckSquare size={12} className="text-emerald-500" />
+                            <span>{member.tugasSelesai} Selesai</span>
+                          </span>
+                          <span className="text-slate-300">•</span>
+                          <span className="inline-flex items-center gap-1 text-blue-600 font-semibold bg-blue-50/60 px-1.5 py-0.2 rounded">
+                            <span>{member.totalTugas} Tugas</span>
+                          </span>
+                          {member.checklistCount > 0 && (
+                            <>
+                              <span className="text-slate-300">•</span>
+                              <span className="inline-flex items-center gap-1 text-purple-600 font-semibold bg-purple-50/60 px-1.5 py-0.2 rounded">
+                                <CheckSquare size={12} className="text-purple-500" />
+                                <span>{member.checklistCount} Ceklis</span>
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Points & Progress Bar */}
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 shrink-0 pl-10 sm:pl-0">
+                      <span className="text-sm sm:text-base font-black text-[#4f46e5] leading-none">
+                        {member.pts} <span className="text-xs font-semibold text-slate-400">pts</span>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 sm:w-28 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <span className="text-[11px] font-semibold text-slate-400 min-w-[26px] text-right">
+                          {percent}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Toggle Show All / Show Less Members */}
+            {topRajinMembers.length > 4 && (
+              <div className="pt-2 text-center border-t border-slate-50">
+                <button
+                  onClick={() => setShowAllMembers(!showAllMembers)}
+                  className="text-xs font-bold text-slate-500 hover:text-emerald-600 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  {showAllMembers ? (
+                    <>Tampilkan Lebih Sedikit <ChevronUp size={14} /></>
+                  ) : (
+                    <>Tampilkan Semua Anggota ({topRajinMembers.length}) <ChevronDown size={14} /></>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* ==================== RIGHT WIDGET PANEL (4 Cols) ==================== */}
+        <div className="lg:col-span-4 space-y-3">
+          {/* A. Premium & Clean Interactive Calendar (Kemenag Style: Masehi & Angka Hijriyah Arab) - Compact & Elegant */}
+          <div className="bg-gradient-to-b from-[#f9fbfa] via-emerald-50/25 to-[#f1f8f5]/60 rounded-2xl border border-emerald-900/10 shadow-xs p-3 sm:p-3.5 space-y-2.5 relative overflow-hidden">
+            {/* Ambient subtle Islamic decorative glows */}
+            <div className="absolute -top-16 -right-16 w-36 h-36 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-teal-200/15 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header: Month title (Satu Baris) + Bawahnya Tulisan Arab Hijriyah, Navigasi < > di Kanan */}
+            <div className="relative z-10 flex items-center justify-between pb-2 border-b border-emerald-950/10 gap-2">
+              {/* Kiri: Icon + Judul 1 Baris + Subtitle Arab di bawahnya */}
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#064e3b] to-[#047857] text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Calendar size={16} className="stroke-[2.2]" />
+                </div>
+                <div className="min-w-0">
+                  {/* Tulisan Oktober 2026 DIBUAT SATU BARIS */}
+                  <h4 className="font-black text-slate-900 text-sm sm:text-base leading-tight tracking-tight whitespace-nowrap">
+                    {MONTH_NAMES[calMonth]} {calYear}
+                  </h4>
+                  {/* Bawahnya Tulisan Arab Bulan Hijriyah */}
+                  <p className="text-[11px] sm:text-xs font-serif font-bold text-emerald-800 leading-tight tracking-wide truncate mt-0.5">
+                    {getHijriArabicTitle(calYear, calMonth)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Kanan: Tombol Navigasi < > Compact */}
+              <div className="flex items-center gap-0.5 border border-slate-200/90 rounded-xl p-0.5 bg-white/90 shadow-2xs shrink-0">
+                <button 
+                  onClick={handlePrevMonth}
+                  title="Bulan Sebelumnya"
+                  className="p-1 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg transition-all text-slate-600 cursor-pointer active:scale-95"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="h-3 w-px bg-slate-200 mx-0.5" />
+                <button 
+                  onClick={handleNextMonth}
+                  title="Bulan Berikutnya"
+                  className="p-1 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg transition-all text-slate-600 cursor-pointer active:scale-95"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Days of Week Header (Kemenag Style: Ahad Merah, Jum'at Hijau) - Compact */}
+            <div className="relative z-10 grid grid-cols-7 gap-1 bg-white/80 p-1 rounded-xl border border-slate-200/70 text-center shadow-2xs">
+              {DAYS_OF_WEEK.map((d, i) => (
+                <span 
+                  key={i} 
+                  className={`text-[9px] font-black uppercase tracking-wider py-0.5 ${
+                    d.isSunday 
+                      ? "text-rose-600 bg-rose-50/70 rounded-md" 
+                      : d.isFriday 
+                      ? "text-emerald-700 bg-emerald-50/70 rounded-md" 
+                      : "text-slate-500"
+                  }`}
+                >
+                  {d.short}
+                </span>
+              ))}
+            </div>
+
+            {/* Dates Grid: Ukuran Compact, Angka Arab Jelas & Tanpa Bertabrakan */}
+            <div className="relative z-10 grid grid-cols-7 gap-1 text-center">
+              {calendarDays.map((item, idx) => {
+                const isSelected = item.current && item.day === selectedDay;
+                const isToday = item.current && item.day === 8 && calMonth === 9 && calYear === 2026;
+                const dayTasks = getTasksForDay(item.day, item.current);
+                const hasTask = dayTasks.length > 0;
+                const hijriDayNumber = getHijriDayNumber(item.year, item.month, item.day);
+                const cellDate = new Date(item.year, item.month, item.day);
+                const isSunday = cellDate.getDay() === 0;
+                const isFriday = cellDate.getDay() === 5;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => item.current && setSelectedDay(item.day)}
+                    className={`h-9.5 sm:h-10 w-full mx-auto flex flex-col justify-between p-1 rounded-xl transition-all relative group cursor-pointer ${
+                      isSelected && isToday
+                        ? "bg-[#064e3b] text-white font-black ring-2 ring-amber-400 ring-offset-1 shadow-xs scale-105 z-10"
+                        : isSelected 
+                        ? "bg-[#064e3b] text-white font-black shadow-xs scale-105 z-10 ring-1.5 ring-emerald-500/40" 
+                        : isToday
+                        ? "bg-amber-100/90 border-2 border-amber-500 text-slate-950 font-black shadow-xs ring-1 ring-amber-300/40 hover:bg-amber-200/90"
+                        : hasTask
+                        ? "bg-emerald-50/80 border border-emerald-200/90 text-slate-800 hover:bg-emerald-100/80 hover:border-emerald-300 shadow-2xs"
+                        : item.current 
+                        ? "bg-white/90 border border-slate-200/70 text-slate-800 hover:bg-white hover:border-emerald-300 shadow-2xs" 
+                        : "bg-slate-100/70 border border-slate-200/60 shadow-2xs cursor-default"
+                    }`}
+                  >
+                    {/* Baris Atas: Angka Hijriyah Arab Jelas & Tidak Tabrakan */}
+                    <div className="w-full flex justify-end items-start pr-0.5 leading-none">
+                      <span className={`text-[10px] sm:text-[11px] font-bold font-serif leading-none ${
+                        isSelected 
+                          ? "text-emerald-100" 
+                          : isToday
+                          ? "text-amber-950 font-black"
+                          : isSunday
+                          ? (item.current ? "text-rose-600" : "text-rose-400/80")
+                          : isFriday
+                          ? (item.current ? "text-emerald-700" : "text-emerald-500/80")
+                          : item.current 
+                          ? "text-slate-700 font-bold" 
+                          : "text-slate-400"
+                      }`}>
+                        {toArabicDigits(hijriDayNumber)}
+                      </span>
+                    </div>
+
+                    {/* Baris Tengah/Bawah: Tanggal Masehi Latin Rata Tengah */}
+                    <div className="w-full flex justify-center items-center my-auto leading-none">
+                      <span className={`text-xs sm:text-[13px] font-black leading-none ${
+                        isSelected 
+                          ? "text-white" 
+                          : isToday
+                          ? "text-slate-950"
+                          : isSunday
+                          ? (item.current ? "text-rose-600" : "text-rose-400/80") 
+                          : isFriday
+                          ? (item.current ? "text-emerald-800" : "text-emerald-500/80")
+                          : item.current 
+                          ? "text-slate-800" 
+                          : "text-slate-400"
+                      }`}>
+                        {item.day}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Selected Date Detail Card - Compact & Clean */}
+            <div className="relative z-10 pt-2 border-t border-emerald-950/10 space-y-1.5">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-slate-800 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span className="font-extrabold text-slate-900 truncate">{selectedDayName}, {selectedDay} {MONTH_NAMES[calMonth]}</span>
+                  <span className="text-slate-300 font-normal">•</span>
+                  <span className="text-emerald-700 font-semibold truncate text-[11px]">{selectedHijriFull}</span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
+                  {tasksOnSelectedDate.length} Agenda
+                </span>
+              </div>
+
+              {/* Task list preview or clean empty state */}
+              {tasksOnSelectedDate.length > 0 ? (
+                <div className="space-y-2">
+                  {tasksOnSelectedDate.map((task) => {
+                    const assignee = members.find(m => m.id === task.assigneeId) || { name: "Tim", color: "#10b981" };
+                    return (
+                      <div 
+                        key={task.id}
+                        onClick={() => setActiveTab?.('board')}
+                        className="p-3 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all cursor-pointer group flex items-center justify-between gap-2 shadow-2xs"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-800 truncate">
+                            {task.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+                              task.priority === 'high' 
+                                ? 'bg-rose-100 text-rose-800' 
+                                : 'bg-sky-100 text-sky-800'
+                            }`}>
+                              {task.priority === 'high' ? 'Tinggi' : 'Normal'}
+                            </span>
+                            <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                              PJ: <strong>{assignee.name}</strong>
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-[10px] font-bold text-emerald-700 bg-white border border-slate-200 group-hover:border-emerald-300 px-2 py-1 rounded-xl shrink-0 flex items-center gap-1 shadow-2xs">
+                          <span>Buka</span>
+                          <ArrowRight size={10} />
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-slate-50/70 border border-slate-200/60 text-center flex items-center justify-between text-xs text-slate-500">
+                  <span className="text-[11px]">Tidak ada tenggat tugas di tanggal ini.</span>
+                  <button
+                    onClick={() => setActiveTab?.('board')}
+                    className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <span>+ Tambah Tugas</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* B. Prioritas Tugas Bulan Ini */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm">Prioritas Tugas Bulan Ini</h4>
+                <p className="text-[10px] text-slate-400">Distribusi tingkat urgensi tugas aktif</p>
+              </div>
+              <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
+                {totalPriorityCount} Tugas
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Tinggi (High) */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-rose-600 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span> Tinggi (High)
+                  </span>
+                  <span className="text-slate-800 font-bold">{highPriorityCount}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-500 rounded-full transition-all duration-500" style={{ width: `${highPercent}%` }}></div>
+                </div>
+              </div>
+
+              {/* Normal */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-sky-600 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-500"></span> Normal
+                  </span>
+                  <span className="text-slate-800 font-bold">{normalPriorityCount}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-500 rounded-full transition-all duration-500" style={{ width: `${normalPercent}%` }}></div>
+                </div>
+              </div>
+
+              {/* Rendah (Low) */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-emerald-600 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Rendah (Low)
+                  </span>
+                  <span className="text-slate-800 font-bold">{lowPriorityCount}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${lowPercent}%` }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* C. Pintas Ruang Kerja (seperti di foto) */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
+            <div>
+              <h4 className="font-bold text-slate-800 text-sm">Pintas Ruang Kerja</h4>
+              <p className="text-[10px] text-slate-400">Akses cepat modul kerja utama</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={() => setActiveTab?.('board')}
+                className="p-3 rounded-xl bg-slate-50/70 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all text-left cursor-pointer group flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Papan Kanban</p>
+                  <p className="text-[10px] text-slate-400">Kelola alur kerja</p>
+                </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
+              </button>
+
+              <button 
+                onClick={() => setActiveTab?.('contents')}
+                className="p-3 rounded-xl bg-slate-50/70 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all text-left cursor-pointer group flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Materi Konten</p>
+                  <p className="text-[10px] text-slate-400">Daftar naskah</p>
+                </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
+              </button>
+
+              <button 
+                onClick={() => setActiveTab?.('notes')}
+                className="p-3 rounded-xl bg-slate-50/70 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all text-left cursor-pointer group flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Catatan & SOP</p>
+                  <p className="text-[10px] text-slate-400">Dokumen tim</p>
+                </div>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Activity Log Drawer Modal */}
+      {showActivityLog && (
+        <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowActivityLog(false)}></div>
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg leading-none mb-1">Aktivitas Tim</h3>
+                <p className="text-xs text-slate-500">Log riwayat operasional otomatis</p>
+              </div>
+              <button onClick={() => setShowActivityLog(false)} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors cursor-pointer"><X size={20} /></button>
+            </div>
+            
+            {(() => {
+              const allActivities = cards.filter(c => !c.deleted).sort((a,b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+              const todayStr = new Date().toDateString();
+              const todayActivities = allActivities.filter(c => new Date(c.updatedAt || c.createdAt || Date.now()).toDateString() === todayStr);
+              const displayedActivities = activityTab === 'today' ? todayActivities : allActivities;
+              
+              return (
+                <>
+                  <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-100">
+                    <button 
+                      onClick={() => setActivityTab('today')}
+                      className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer ${activityTab === 'today' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <Calendar size={14}/> Hari Ini ({todayActivities.length})
+                    </button>
+                    <button 
+                      onClick={() => setActivityTab('all')}
+                      className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer ${activityTab === 'all' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <Clock size={14}/> Semua ({allActivities.length})
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-50 custom-scrollbar">
+                    {displayedActivities.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400 font-semibold text-sm">
+                        Belum ada aktivitas {activityTab === 'today' ? 'hari ini' : ''}.
+                      </div>
+                    ) : displayedActivities.map((c, i) => {
+                      const assignee = members.find(m => m.id === c.assigneeId);
+                      const action = c.columnId === "c_2" ? "memindahkan tugas" : "menambahkan tugas";
+                      const date = new Date(c.updatedAt || c.createdAt || Date.now());
+                      const timeStr = `${date.getHours().toString().padStart(2, '0')}.${date.getMinutes().toString().padStart(2, '0')} WIB`;
+                      const dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                      const isMoved = action === "memindahkan tugas";
+
+                      return (
+                        <div key={c.id || i} className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow">
+                          <div className="flex gap-3">
+                            <div className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-white ${isMoved ? 'bg-emerald-500 shadow-xs' : 'bg-[#10b981] shadow-xs'}`}>
+                              {isMoved ? <ArrowRight size={14} /> : <Plus size={14} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-slate-700 leading-snug">
+                                <strong className="text-emerald-600 font-bold">{assignee?.name || "Nu'man"}</strong> {action} <strong className="text-slate-900">"{c.title}"</strong> {isMoved ? '(ke Selesai)' : ''}
+                              </p>
+                              <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1 font-medium"><Clock size={11}/> {activityTab === 'all' && date.toDateString() !== todayStr ? `${dateStr} • ` : ''}{timeStr}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+      {/* Hadith & Target Settings Modal */}
+      {showHadithModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="absolute inset-0" onClick={() => setShowHadithModal(false)} />
+          <div className="relative w-full max-w-xl bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 z-10">
+            {/* Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50/50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-[#064e3b] text-amber-300 flex items-center justify-center shadow-xs">
+                  <SlidersHorizontal size={18} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-800 text-base leading-tight">Pengaturan Mutiara Hadits & Target</h3>
+                  <p className="text-xs text-slate-500">Kelola target dakwah mingguan & kutipan inspirasi tim</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHadithModal(false)} 
+                className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
+              
+              {/* Bagian 1: Pengaturan Target Mingguan */}
+              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <BookOpen size={14} className="text-emerald-600" /> Target Rilis Konten Pekan Ini
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Target konten dakwah yang ingin dipublikasikan setiap pekan
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => handleSaveTarget(Math.max(1, targetWeek - 1))}
+                      className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 font-bold flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                    >
+                      -
+                    </button>
+                    <input 
+                      type="number"
+                      min="1"
+                      value={targetWeek}
+                      onChange={(e) => handleSaveTarget(parseInt(e.target.value) || 1)}
+                      className="w-14 text-center font-bold text-slate-800 text-sm py-1.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-2xs"
+                    />
+                    <button 
+                      onClick={() => handleSaveTarget(targetWeek + 1)}
+                      className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 font-bold flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-emerald-100/70 text-[11px] text-emerald-800 flex items-center justify-between">
+                  <span>Realisasi saat ini: <strong>{publishedThisWeek} Konten</strong> (dihitung otomatis dari menu <em>Materi Konten</em> status "Dipublikasi")</span>
+                  <span className="font-bold bg-white px-2 py-0.5 rounded-md border border-emerald-200/60">{targetPercent}%</span>
+                </div>
+              </div>
+
+              {/* Bagian 2: Daftar Hadits */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Daftar Kutipan Hadits ({hadithList.length})
+                    </h4>
+                    <p className="text-[11px] text-slate-500">Pilih hadits yang ingin ditonjolkan atau tambah hadits baru</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsAddingNew(!isAddingNew)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200/80 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Plus size={14} />
+                    <span>{isAddingNew ? "Batal Tambah" : "Tambah Hadits"}</span>
+                  </button>
+                </div>
+
+                {/* Form Tambah Hadits Baru */}
+                {isAddingNew && (
+                  <form onSubmit={handleAddHadith} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in zoom-in-98 duration-150">
+                    <h5 className="text-xs font-bold text-slate-700">Input Hadits / Faedah Baru</h5>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Topik / Tema</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="Contoh: Keutamaan Al-Qur'an"
+                          value={newTheme}
+                          onChange={(e) => setNewTheme(e.target.value)}
+                          className="w-full text-xs p-2 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Sumber / Riwayat</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="Contoh: HR. Muslim no. 804"
+                          value={newSource}
+                          onChange={(e) => setNewSource(e.target.value)}
+                          className="w-full text-xs p-2 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Teks Kaligrafi Arab (beserta harakat)</label>
+                      <textarea 
+                        dir="rtl"
+                        required
+                        rows={2}
+                        placeholder="اقْرَؤُا القُرْآنَ فَإِنَّهُ يَأْتِي يَوْمَ القِيَامَةِ شَفِيعًا لأَصْحَابِهِ"
+                        value={newArabic}
+                        onChange={(e) => setNewArabic(e.target.value)}
+                        className="w-full font-arabic text-base p-2.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 leading-relaxed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Terjemahan Bahasa Indonesia</label>
+                      <textarea 
+                        required
+                        rows={2}
+                        placeholder="Bacalah Al-Qur'an, sesungguhnya ia akan datang di hari kiamat sebagai pemberi syafaat bagi pembacanya."
+                        value={newTranslation}
+                        onChange={(e) => setNewTranslation(e.target.value)}
+                        className="w-full text-xs p-2.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-1">
+                      <button 
+                        type="button"
+                        onClick={() => setIsAddingNew(false)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                      >
+                        Batal
+                      </button>
+                      <button 
+                        type="submit"
+                        className="text-xs font-bold px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
+                      >
+                        Simpan & Tampilkan
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* List Items */}
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {hadithList.map((h, idx) => {
+                    const isActive = hadithIndex === idx;
+
+                    return (
+                      <div 
+                        key={idx}
+                        className={`p-3 rounded-2xl border transition-all ${
+                          isActive 
+                            ? "bg-emerald-50/70 border-emerald-300 shadow-2xs ring-1 ring-emerald-400/30" 
+                            : "bg-white border-slate-200/80 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                              {h.theme}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-semibold">
+                              {h.source}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {isActive ? (
+                              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
+                                <Check size={11} /> Aktif di Dashboard
+                              </span>
+                            ) : (
+                              <button 
+                                onClick={() => setHadithIndex(idx)}
+                                className="text-[10px] font-bold text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50 px-2 py-0.5 rounded-md border border-slate-200 hover:border-emerald-200 transition-colors cursor-pointer"
+                              >
+                                Tampilkan Ini
+                              </button>
+                            )}
+
+                            {hadithList.length > 1 && (
+                              <button 
+                                onClick={() => handleDeleteHadith(idx)}
+                                title="Hapus hadits ini"
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <p dir="rtl" className="font-arabic text-sm text-emerald-950 font-bold leading-relaxed mb-1">
+                          {h.arabic}
+                        </p>
+                        <p className="text-[11px] text-slate-600 italic line-clamp-2">
+                          "{h.translation}"
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <button 
+                onClick={handleResetToDefault}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                <RotateCcw size={12} />
+                <span>Reset ke Hadits Bawaan</span>
+              </button>
+
+              <button 
+                onClick={() => setShowHadithModal(false)}
+                className="text-xs font-bold px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white shadow-xs transition-colors cursor-pointer"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

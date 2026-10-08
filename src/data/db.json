@@ -1,0 +1,159 @@
+{
+  "members": [
+    { "id": "u_numan", "name": "Nu'man", "role": "Admin", "color": "" },
+    { "id": "u_hammam", "name": "Hammam", "role": "Pengajar" },
+    { "id": "u_hakim", "name": "Hakim", "role": "Pengajar" },
+    { "id": "u_hibat", "name": "Hibat", "role": "Pengajar" },
+    { "id": "u_fakhmur", "name": "Fakhmur", "role": "Pengajar" },
+    { "id": "u_bilal", "name": "Bilal", "role": "Pengajar" },
+    { "id": "u_nabil", "name": "Nabil", "role": "Pengajar" },
+    { "id": "u_qowi", "name": "Qowi", "role": "Pengajar" },
+    { "id": "u_asyrof", "name": "Asyrof", "role": "Pengajar" },
+    { "id": "u_sholih", "name": "Sholih", "role": "Pengajar" },
+    { "id": "u_faruq", "name": "Faruq", "role": "Tim Kreatif" },
+    { "id": "u_jabir", "name": "Jabir", "role": "Tim Kreatif" }
+  ],
+  "columns": [
+    { "id": "c_0", "title": "Todo", "order": 0, "updatedAt": 1789637747493, "isDone": false },
+    { "id": "c_1", "title": "Doing", "order": 1, "updatedAt": 1789637747493, "isDone": false },
+    { "id": "c_2", "title": "Done", "order": 2, "updatedAt": 1789637747493, "isDone": true }
+  ],
+  "cards": [
+    {
+      "id": "t_sertifikat_aisar",
+      "title": "Sertifikat Aisar",
+      "description": "Buatkan sertifikat kelulusan untuk halaqah yang sudah selesai",
+      "assigneeId": "u_numan",
+      "dueDate": "",
+      "priority": "high",
+      "order": 0,
+      "createdAt": 1791380000000,
+      "updatedAt": 1791380000000,
+      "createdBy": "u_numan",
+      "deleted": false,
+      "checklist": [
+        { "id": "cl_1", "text": "Pengumuman pengumpulan nama", "done": false },
+        { "id": "cl_2", "text": "Pengambilan testimoni", "done": false },
+        { "id": "cl_3", "text": "Buat di Canva", "done": false },
+        { "id": "cl_4", "text": "Distribusi ke santri yang berhak", "done": false }
+      ],
+      "report": "",
+      "reportLink": "",
+      "doneAt": null,
+      "month": "2026-10",
+      "columnId": "c_0"
+    }
+  ],
+  "notes": [
+    {
+      "id": "n_d49faipk8i3",
+      "title": "Rapat 28 September 2026 I 99Coffee",
+      "date": "2026-09-28",
+      "content": "Materi Bahasan: SOP detail CS (Kelas baru/kelas selesai/promosi/balas pesan/dll) Laporan pekanan kinerja CS Kandidat CS baru Menyelaraskan kembali tugas masing-masing Persiapan kelas ujicoba",
+      "decisions": [],
+      "actions": [],
+      "createdBy": "u_zakki",
+      "createdAt": 1790582454795,
+      "updatedAt": 1790586185279,
+      "category": "Evaluasi",
+      "deleted": false
+    },
+    {
+      "id": "n_nnpgsjs2y4t",
+      "title": "Rapat Selasa, 22, September",
+      "date": "2026-09-22",
+      "content": "Evaluasi Tugas: - Marketing belum berjalan - Konten berhenti lama Sistem yang akan diberlakukan: - Muzakki memberi plan yang didelegasikan ke Ahmad",
+      "decisions": [],
+      "actions": [],
+      "createdBy": "u_ahmad",
+      "createdAt": 1790081122637,
+      "updatedAt": 1790083126498,
+      "category": "Evaluasi",
+      "deleted": false
+    },
+    {
+      "id": "n_dn982gz6zzv",
+      "title": "Alur Launching Program Sertfikasi BNSP",
+      "date": "2026-09-14",
+      "content": "Ada 2 jalur utama untuk menarik market potensial: 1. Edukasi secara publik (melalui media sosial) 2. Kuis sertifikasi Nah, keduanya nanti mengarah ke Grup Edukasi Sertifikasi BNSP Jalur Pertama: Edukasi",
+      "decisions": [],
+      "actions": [],
+      "createdBy": "u_zakki",
+      "createdAt": 1789389309883,
+      "updatedAt": 1789389309883,
+      "category": "Strategi",
+      "deleted": false
+    }
+  ],
+  "links": [
+    { "title": "Data Peserta dan Penagihan", "url": "https://docs.google.com", "category": "Kelas", "id": "l_1" },
+    { "title": "Skrip Video Iklan Kampus", "url": "https://docs.google.com/document", "category": "Materi Iklan Ammiyah", "id": "l_2" },
+    { "title": "Link Portal Afiliator", "url": "https://aff-kba.pages.dev", "category": "Afiliator", "id": "l_3" },
+    { "title": "CRM KAMPUS", "url": "https://crm-kampus.pages.dev", "category": "Sistem", "id": "l_4" }
+  ],
+  "sops": [
+    {
+      "id": "sop_rcslf01jged",
+      "title": "SOP (PANDUAN LANGKAH KERJA)",
+      "category": "Operasional",
+      "content": "SOP: Balas calon murid yang bertanya. Balas maksimal dalam 1 jam di jam kerja.",
+      "pic": "Nu'man",
+      "createdBy": "Nu'man",
+      "createdAt": 1790933458117,
+      "updatedAt": 1790933502448,
+      "deleted": false
+    },
+    {
+      "id": "sop_kj7fgv9c94x",
+      "title": "SOP CS",
+      "category": "Operasional",
+      "content": "Termasuk SOP laporan harian / pekanan, sop penagihan, sop pembukaan kelas dst",
+      "pic": "Ahmad",
+      "createdBy": "Ahmad",
+      "createdAt": 1790583761985,
+      "updatedAt": 1790584882668,
+      "deleted": false
+    }
+  ],
+  "contents": [
+    {
+      "id": "cnt_yw95vzebk4u",
+      "title": "Sudah Bisa Bahasa Arab? Kini Ada Jalur Sertifikasi Kompetensi Resmi",
+      "content": "Carousel info",
+      "status": "Doing",
+      "priority": "high",
+      "type": "Carousel",
+      "dueDate": "25 Okt",
+      "assigneeId": "u_zakki",
+      "order": 0,
+      "month": "2026-09",
+      "deleted": false
+    },
+    {
+      "id": "cnt_6k97xndfnwq",
+      "title": "Sertifikasi BNSP Bahasa Arab Cocok untuk Siapa?",
+      "content": "Info cocok",
+      "status": "Todo",
+      "priority": "normal",
+      "type": "Single Post",
+      "dueDate": "28 Okt",
+      "assigneeId": "u_zakki",
+      "order": 1,
+      "month": "2026-09",
+      "deleted": false
+    },
+    {
+      "id": "cnt_ypurd1tzb93",
+      "title": "Punya kemampuan bahasa Arab? Ada peluang",
+      "content": "Video Reels",
+      "status": "Published 🚀",
+      "priority": "high",
+      "type": "Reels / Video",
+      "dueDate": "10 Okt",
+      "assigneeId": "u_zakki",
+      "order": 2,
+      "month": "2026-09",
+      "deleted": false
+    }
+  ]
+}
