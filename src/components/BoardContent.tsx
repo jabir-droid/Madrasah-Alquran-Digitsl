@@ -1,10 +1,19 @@
-import { MoreHorizontal, Calendar, CheckSquare, Plus, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, Archive, Check, FileText, Flame } from "lucide-react";
+import { MoreHorizontal, Calendar, CheckSquare, Plus, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, Archive, Check, FileText, Flame, Sparkles } from "lucide-react";
 import db from "@/data/db.json";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useAppContext } from "@/context/AppContext";
 import { useState, useEffect } from "react";
 import CardModal from "./CardModal";
 import { getMemberAvatar } from "@/utils/avatar";
+import { 
+  MONTH_NAMES, 
+  DAYS_OF_WEEK, 
+  toArabicDigits, 
+  getHijriDayNumber, 
+  getHijriMonthRange, 
+  getHijriArabicTitle,
+  generateCalendarCells 
+} from "@/utils/calendar";
 
 export default function BoardContent() {
   const { data, moveCard, toggleChecklist, addCard } = useAppContext();
@@ -17,6 +26,35 @@ export default function BoardContent() {
   const [dueDateFilter, setDueDateFilter] = useState("");
   const [showMonthSelect, setShowMonthSelect] = useState(false);
   const [avatarTick, setAvatarTick] = useState(0);
+
+  // Calendar View Specific Month & Year State
+  const [calMonth, setCalMonth] = useState(9); // 0-indexed, 9 = Oktober
+  const [calYear, setCalYear] = useState(2026);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<number | null>(8);
+
+  const handlePrevMonth = () => {
+    if (calMonth === 0) {
+      setCalMonth(11);
+      setCalYear(prev => prev - 1);
+    } else {
+      setCalMonth(prev => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calMonth === 11) {
+      setCalMonth(0);
+      setCalYear(prev => prev + 1);
+    } else {
+      setCalMonth(prev => prev + 1);
+    }
+  };
+
+  const handleResetToCurrentMonth = () => {
+    setCalMonth(9);
+    setCalYear(2026);
+    setSelectedCalendarDate(8);
+  };
 
   useEffect(() => {
     const handleAvatarUpdate = () => setAvatarTick(prev => prev + 1);
@@ -140,23 +178,33 @@ export default function BoardContent() {
             </button>
           </div>
           <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 relative z-20 ml-2">
-             <button className="p-1 text-slate-400 hover:bg-slate-50 rounded"><ChevronLeft size={16}/></button>
-             <button onClick={() => setShowMonthSelect(!showMonthSelect)} className="px-3 py-1 text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 rounded"><Calendar size={14}/> Okt 2026 <ChevronDown size={14}/></button>
-             <button className="p-1 text-slate-400 hover:bg-slate-50 rounded"><ChevronRight size={16}/></button>
+             <button onClick={handlePrevMonth} title="Bulan Sebelumnya" className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded cursor-pointer active:scale-95"><ChevronLeft size={16}/></button>
+             <button onClick={() => setShowMonthSelect(!showMonthSelect)} className="px-3 py-1 text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 rounded cursor-pointer"><Calendar size={14} className="text-emerald-700"/> {MONTH_NAMES[calMonth].slice(0, 3)} {calYear} <ChevronDown size={14}/></button>
+             <button onClick={handleNextMonth} title="Bulan Berikutnya" className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded cursor-pointer active:scale-95"><ChevronRight size={16}/></button>
              
              {showMonthSelect && (
-                <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 shadow-xl rounded-xl p-4 w-64 z-50">
+                <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 shadow-xl rounded-2xl p-4 w-72 z-50 animate-in fade-in zoom-in-95 duration-150">
                    <div className="flex justify-between items-center mb-4">
-                      <button className="p-1 hover:bg-slate-50 rounded"><ChevronLeft size={16}/></button>
-                      <span className="font-bold text-slate-800 text-sm">2026</span>
-                      <button className="p-1 hover:bg-slate-50 rounded"><ChevronRight size={16}/></button>
+                      <button onClick={() => setCalYear(prev => prev - 1)} className="p-1 hover:bg-slate-100 rounded-lg cursor-pointer"><ChevronLeft size={16}/></button>
+                      <span className="font-bold text-slate-800 text-sm">{calYear}</span>
+                      <button onClick={() => setCalYear(prev => prev + 1)} className="p-1 hover:bg-slate-100 rounded-lg cursor-pointer"><ChevronRight size={16}/></button>
                    </div>
                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      {['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'].map(m => (
-                         <button onClick={() => setShowMonthSelect(false)} key={m} className={`py-1.5 text-xs font-bold rounded-lg transition-colors ${m === 'Okt' ? 'bg-brand-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>{m}</button>
+                      {MONTH_NAMES.map((m, idx) => (
+                         <button 
+                           onClick={() => { setCalMonth(idx); setShowMonthSelect(false); }} 
+                           key={m} 
+                           className={`py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                             calMonth === idx 
+                               ? 'bg-[#064e3b] text-white shadow-xs' 
+                               : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-800'
+                           }`}
+                         >
+                           {m.slice(0, 3)}
+                         </button>
                       ))}
                    </div>
-                   <button onClick={() => setShowMonthSelect(false)} className="w-full py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors">Bulan ini</button>
+                   <button onClick={() => { handleResetToCurrentMonth(); setShowMonthSelect(false); }} className="w-full py-2 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-colors cursor-pointer">Bulan Berjalan (Okt 2026)</button>
                 </div>
              )}
           </div>
@@ -398,45 +446,299 @@ export default function BoardContent() {
         </div>
       )}
 
-      {view === "kalender" && (
-        <div className="flex-1 bg-white border border-slate-200 rounded-2xl flex flex-col p-4">
-          <div className="grid grid-cols-7 gap-2 mb-3 text-center">
-            {['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'].map(d => (
-              <div key={d} className="text-[10px] font-bold text-slate-400 tracking-widest">{d}</div>
-            ))}
-          </div>
-          <div className="flex-1 grid grid-cols-7 gap-2 auto-rows-fr">
-            {Array.from({length: 35}).map((_, i) => { 
-              const date = i - 3; 
-              const isCurrentMonth = date > 0 && date <= 31;
-              const isToday = date === 6; 
-              
-              const dayCards = isCurrentMonth ? data.cards.filter(c => {
-                if (!c.dueDate) return false;
-                const d = new Date(c.dueDate);
-                return d.getDate() === date && d.getMonth() === 9 && d.getFullYear() === 2026;
-              }) : [];
+      {view === "kalender" && (() => {
+        const calendarCells = generateCalendarCells(calYear, calMonth);
+        const hijriArabicTitle = getHijriArabicTitle(calYear, calMonth);
+        const hijriRangeText = getHijriMonthRange(calYear, calMonth);
 
-              return (
-                <div key={i} className={`p-2 border rounded-xl flex flex-col gap-1 overflow-y-auto ${isToday ? 'bg-indigo-50/50 border-indigo-200' : 'bg-white border-slate-100'} ${isCurrentMonth ? '' : 'opacity-40'}`}>
-                  {isCurrentMonth && <span className={`text-xs font-bold text-right mb-1 ${isToday ? 'text-indigo-600' : 'text-slate-400'}`}>{date}</span>}
-                  {dayCards.map(c => {
-                    const isDone = c.columnId === 'c_2';
-                    return (
-                      <div key={c.id} onClick={() => {
-                        setEditingCard(c);
-                        setIsModalOpen(true);
-                      }} className={`text-[10px] font-bold px-2 py-1 rounded-md truncate cursor-pointer transition-colors ${isDone ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'}`} title={c.title}>
-                        • {c.title}
-                      </div>
-                    )
-                  })}
+        // Filter cards that have dueDates in this month
+        const monthCards = data.cards.filter(c => {
+          if (c.deleted || !c.dueDate) return false;
+          if (memberFilter && memberFilter !== "me" && c.assigneeId !== memberFilter) return false;
+          if (priorityFilter && c.priority !== priorityFilter) return false;
+          const d = new Date(c.dueDate);
+          return d.getMonth() === calMonth && d.getFullYear() === calYear;
+        });
+
+        return (
+          <div className="flex-1 bg-gradient-to-b from-[#f9fbfa] via-emerald-50/20 to-[#f1f8f5]/60 border border-emerald-900/10 rounded-3xl flex flex-col p-4 sm:p-6 shadow-xs relative overflow-hidden animate-in fade-in duration-300">
+            {/* Ambient subtle Islamic decorative glows */}
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-teal-200/15 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Top Bar of Calendar (Matching Beranda Kemenag Theme) */}
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-emerald-950/10 gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#064e3b] to-[#047857] text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Calendar size={20} className="stroke-[2.2]" />
                 </div>
-              )
-            })}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-slate-900 text-lg sm:text-xl leading-tight tracking-tight">
+                      {MONTH_NAMES[calMonth]} {calYear}
+                    </h3>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200/70">
+                      {monthCards.length} Agenda Tugas
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-800 mt-0.5">
+                    <span className="font-serif font-bold text-sm tracking-wide">
+                      {hijriArabicTitle}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-[11px] font-medium text-slate-500">
+                      {hijriRangeText}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Controls in Header */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleResetToCurrentMonth}
+                  className="px-3 py-1.5 text-xs font-bold text-emerald-800 bg-white/90 hover:bg-emerald-50 border border-emerald-200/80 rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95"
+                >
+                  Hari Ini
+                </button>
+                <div className="flex items-center gap-0.5 border border-slate-200/90 rounded-xl p-0.5 bg-white/90 shadow-2xs">
+                  <button
+                    onClick={handlePrevMonth}
+                    title="Bulan Sebelumnya"
+                    className="p-1.5 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg transition-all text-slate-600 cursor-pointer active:scale-95"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <div className="h-4 w-px bg-slate-200 mx-0.5" />
+                  <button
+                    onClick={handleNextMonth}
+                    title="Bulan Berikutnya"
+                    className="p-1.5 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg transition-all text-slate-600 cursor-pointer active:scale-95"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Days of Week Header (Kemenag Style: Ahad Merah, Jum'at Hijau) */}
+            <div className="relative z-10 grid grid-cols-7 gap-2 mb-2">
+              {DAYS_OF_WEEK.map((d, i) => (
+                <div 
+                  key={i} 
+                  className={`text-center py-2 px-1 rounded-xl border transition-all ${
+                    d.isSunday 
+                      ? "text-rose-600 bg-rose-50/80 border-rose-200/70 shadow-2xs" 
+                      : d.isFriday 
+                      ? "text-emerald-800 bg-emerald-50/80 border-emerald-200/70 shadow-2xs font-extrabold" 
+                      : "text-slate-600 bg-white/80 border-slate-200/70 shadow-2xs"
+                  }`}
+                >
+                  <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider">
+                    {d.short}
+                  </div>
+                  <div className={`text-[10px] font-serif mt-0.5 leading-none ${
+                    d.isSunday ? "text-rose-400" : d.isFriday ? "text-emerald-600 font-bold" : "text-slate-400"
+                  }`}>
+                    {d.arabic}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days Grid */}
+            <div className="relative z-10 flex-1 grid grid-cols-7 gap-2 auto-rows-fr min-h-[500px]">
+              {calendarCells.map((item, idx) => {
+                const isToday = item.current && item.day === 8 && item.month === 9 && item.year === 2026;
+                const isSelected = selectedCalendarDate === item.day && item.current;
+                const hijriDayNumber = getHijriDayNumber(item.year, item.month, item.day);
+                const cellDate = new Date(item.year, item.month, item.day);
+                const isSunday = cellDate.getDay() === 0;
+                const isFriday = cellDate.getDay() === 5;
+
+                // Cards for this specific day
+                const dayCards = item.current ? data.cards.filter(c => {
+                  if (c.deleted || !c.dueDate) return false;
+                  if (memberFilter && memberFilter !== "me" && c.assigneeId !== memberFilter) return false;
+                  if (priorityFilter && c.priority !== priorityFilter) return false;
+                  const d = new Date(c.dueDate);
+                  return (
+                    d.getDate() === item.day && 
+                    d.getMonth() === item.month && 
+                    d.getFullYear() === item.year
+                  );
+                }) : [];
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      if (item.current) setSelectedCalendarDate(item.day);
+                    }}
+                    className={`p-2 sm:p-2.5 rounded-2xl flex flex-col justify-between transition-all duration-200 relative group overflow-hidden border ${
+                      !item.current
+                        ? "bg-slate-50/40 border-slate-200/40 opacity-40 cursor-default"
+                        : isToday
+                        ? "bg-gradient-to-b from-amber-50/95 via-amber-100/40 to-white border-2 border-amber-400 shadow-sm ring-1 ring-amber-300/40"
+                        : isSelected
+                        ? "bg-white border-emerald-400 shadow-sm ring-2 ring-emerald-500/30"
+                        : dayCards.length > 0
+                        ? "bg-white/95 border-emerald-200/80 hover:border-emerald-300 hover:shadow-xs"
+                        : "bg-white/80 border-slate-200/70 hover:border-slate-300 hover:bg-white hover:shadow-2xs"
+                    }`}
+                  >
+                    {/* Top Row: Date Masehi (Left) + Angka Hijriyah Arab (Right) */}
+                    <div className="flex items-center justify-between gap-1 leading-none pb-1 border-b border-slate-100">
+                      {/* Left: Latin Day Number */}
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-xs sm:text-sm font-black leading-none ${
+                          !item.current
+                            ? "text-slate-300"
+                            : isToday
+                            ? "text-amber-950 font-black"
+                            : isSunday
+                            ? "text-rose-600 font-extrabold"
+                            : isFriday
+                            ? "text-emerald-800 font-extrabold"
+                            : "text-slate-800"
+                        }`}>
+                          {item.day}
+                        </span>
+                        {isToday && (
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-amber-400 text-amber-950 px-1.5 py-0.2 rounded-md leading-none shadow-2xs hidden sm:inline-block">
+                            Hari Ini
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Right: Angka Hijriyah Arab */}
+                      <span className={`text-[11px] sm:text-xs font-bold font-serif leading-none ${
+                        !item.current
+                          ? "text-slate-300"
+                          : isToday
+                          ? "text-amber-800 font-black"
+                          : isSunday
+                          ? "text-rose-500"
+                          : isFriday
+                          ? "text-emerald-700 font-extrabold"
+                          : "text-slate-400"
+                      }`}>
+                        {toArabicDigits(hijriDayNumber)}
+                      </span>
+                    </div>
+
+                    {/* Middle: Scheduled Tasks List */}
+                    <div className="flex-1 my-1.5 space-y-1 overflow-y-auto max-h-[90px] custom-scrollbar">
+                      {dayCards.map((c) => {
+                        const isDone = c.columnId === "c_2";
+                        const assignee = getAssignee(c.assigneeId);
+
+                        return (
+                          <div
+                            key={c.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCard(c);
+                              setIsModalOpen(true);
+                            }}
+                            className={`p-1.5 rounded-xl border text-[10px] font-semibold flex items-center justify-between gap-1 cursor-pointer transition-all hover:scale-[1.02] shadow-2xs ${
+                              isDone
+                                ? "bg-emerald-50/90 border-emerald-200/90 text-emerald-800 hover:bg-emerald-100"
+                                : c.priority === "high"
+                                ? "bg-rose-50/80 border-rose-200/80 text-rose-800 hover:bg-rose-100"
+                                : "bg-indigo-50/80 border-indigo-200/80 text-indigo-800 hover:bg-indigo-100"
+                            }`}
+                            title={`${c.title} (${isDone ? 'Selesai' : 'Aktif'})`}
+                          >
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                isDone 
+                                  ? "bg-emerald-500" 
+                                  : c.priority === "high" 
+                                  ? "bg-rose-500" 
+                                  : "bg-indigo-500"
+                              }`} />
+                              <span className="truncate leading-tight">
+                                {c.title}
+                              </span>
+                            </div>
+
+                            {/* Tiny assignee avatar */}
+                            <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-white/80 shadow-2xs" title={assignee.name}>
+                              {assignee.avatarUrl ? (
+                                <img src={assignee.avatarUrl} alt={assignee.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="w-full h-full flex items-center justify-center bg-slate-600 text-[8px] text-white font-bold">
+                                  {assignee.initial}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom: Quick Add Task Button for this day on hover */}
+                    {item.current && (
+                      <div className="pt-1 border-t border-slate-100/60 flex items-center justify-between opacity-80 group-hover:opacity-100 transition-opacity">
+                        <span className="text-[9px] font-bold text-slate-400">
+                          {dayCards.length > 0 ? `${dayCards.length} tugas` : "—"}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const monthStr = String(item.month + 1).padStart(2, "0");
+                            const dayStr = String(item.day).padStart(2, "0");
+                            const defaultDate = `${item.year}-${monthStr}-${dayStr}`;
+                            setEditingCard({
+                              title: "",
+                              dueDate: defaultDate,
+                              priority: "normal",
+                              checklist: [],
+                              columnId: "c_0"
+                            });
+                            setIsModalOpen(true);
+                          }}
+                          title="Tambah tugas di tanggal ini"
+                          className="opacity-0 group-hover:opacity-100 text-[9px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-0.5"
+                        >
+                          <Plus size={9} /> Tambah
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Legend Matching Kemenag Palette */}
+            <div className="relative z-10 mt-3 pt-3 border-t border-emerald-950/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                  <span>Hari Ahad (Libur)</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                  <span>Hari Jum&apos;at (Sayyidul Ayyam)</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-amber-200"></span>
+                  <span>Hari Ini</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                  <span>Tugas Terjadwal</span>
+                </span>
+              </div>
+              <div className="text-[11px] font-bold text-emerald-800">
+                <span>Kalender Hijriyah Ummul Qura &amp; Masehi Kemenag</span>
+              </div>
+            </div>
+
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {isModalOpen && (
         <CardModal 
