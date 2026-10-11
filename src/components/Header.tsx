@@ -12,12 +12,14 @@ interface HeaderProps {
 
 export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleSidebar }: HeaderProps) {
   const { 
+    data,
     currentUser, 
     switchUser, 
     syncStatus, 
     syncNow,
     isAdminVerified,
     openAdminModal,
+    openMemberModal,
     lockAdmin
   } = useAppContext();
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -325,63 +327,193 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                 </p>
               </div>
 
-              {/* Account Switcher List */}
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 px-2.5 pt-1 uppercase tracking-wider">
-                  Ganti Pengguna:
-                </p>
-                {PRESET_USERS.map((u) => {
-                  const isCurrent = currentUser.role === u.role;
-                  
-                  return (
-                    <button
-                      key={u.role}
-                      onClick={() => {
-                        setShowRoleMenu(false);
-                        if (isCurrent) return;
-                        switchUser(u.role);
-                      }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-left transition-all cursor-pointer ${
-                        isCurrent 
-                          ? 'bg-emerald-50 border border-emerald-200/90 text-emerald-950 font-bold shadow-2xs' 
-                          : 'hover:bg-slate-50 text-slate-700 border border-transparent'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-8 h-8 rounded-full ${u.avatarBg} text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-2xs`}>
-                          {u.initials}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold leading-tight flex items-center gap-1.5 truncate">
-                            {u.name}
-                            {u.role === "admin" ? (
-                              <ShieldCheck size={12} className="text-emerald-600" />
-                            ) : u.role === "kreatif" ? (
-                              <Layers size={12} className="text-purple-600" />
-                            ) : (
-                              <BookOpen size={12} className="text-blue-600" />
-                            )}
-                          </p>
-                          <p className="text-[10px] text-slate-500 truncate">{u.roleLabel}</p>
-                        </div>
-                      </div>
+              {/* Account Switcher List - All Members */}
+              <div className="max-h-72 overflow-y-auto pr-1 space-y-3 divide-y divide-slate-100">
+                {/* 1. Admin */}
+                <div className="pt-1">
+                  <p className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <ShieldCheck size={11} className="text-emerald-600" />
+                    Admin / Tim Inti
+                  </p>
+                  <div className="space-y-1">
+                    {data.members.filter(m => {
+                      const r = (m.role || "").toLowerCase();
+                      return r.includes("admin") || r.includes("inti");
+                    }).map((m) => {
+                      const isCurrent = currentUser.id === m.id || (currentUser.role === "admin" && currentUser.name === m.name);
+                      const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "AD";
+                      const avatar = getMemberAvatar(m.name);
 
-                      <div className="shrink-0 pl-1">
-                        {isCurrent ? (
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Check size={11} className="stroke-[3]" />
-                            Aktif
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                            <Lock size={9} />
-                            PIN
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setShowRoleMenu(false);
+                            if (isCurrent) return;
+                            openMemberModal(m.id);
+                          }}
+                          className={`w-full flex items-center justify-between p-2 rounded-2xl text-left transition-all cursor-pointer ${
+                            isCurrent 
+                              ? 'bg-emerald-50 border border-emerald-200/90 text-emerald-950 font-bold shadow-2xs' 
+                              : 'hover:bg-slate-50 text-slate-700 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
+                              {avatar ? (
+                                <img src={avatar} alt={m.name} className="w-full h-full object-cover" />
+                              ) : (
+                                initials
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold leading-tight truncate">{m.name}</p>
+                              <p className="text-[10px] text-slate-400 truncate">{m.role}</p>
+                            </div>
+                          </div>
+                          <div className="shrink-0 pl-1">
+                            {isCurrent ? (
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                <Check size={10} className="stroke-[3]" />
+                                Aktif
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                <Lock size={9} />
+                                PIN
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Tim Kreatif */}
+                <div className="pt-2">
+                  <p className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Layers size={11} className="text-purple-600" />
+                    Tim Kreatif & Desain
+                  </p>
+                  <div className="space-y-1">
+                    {data.members.filter(m => {
+                      const r = (m.role || "").toLowerCase();
+                      return r.includes("kreatif");
+                    }).map((m) => {
+                      const isCurrent = currentUser.id === m.id || (currentUser.role === "kreatif" && currentUser.name === m.name);
+                      const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "KR";
+                      const avatar = getMemberAvatar(m.name);
+
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setShowRoleMenu(false);
+                            if (isCurrent) return;
+                            openMemberModal(m.id);
+                          }}
+                          className={`w-full flex items-center justify-between p-2 rounded-2xl text-left transition-all cursor-pointer ${
+                            isCurrent 
+                              ? 'bg-purple-50 border border-purple-200/90 text-purple-950 font-bold shadow-2xs' 
+                              : 'hover:bg-slate-50 text-slate-700 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
+                              {avatar ? (
+                                <img src={avatar} alt={m.name} className="w-full h-full object-cover" />
+                              ) : (
+                                initials
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold leading-tight truncate">{m.name}</p>
+                              <p className="text-[10px] text-slate-400 truncate">{m.role}</p>
+                            </div>
+                          </div>
+                          <div className="shrink-0 pl-1">
+                            {isCurrent ? (
+                              <span className="text-[9px] font-bold text-purple-700 bg-purple-100 border border-purple-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                <Check size={10} className="stroke-[3]" />
+                                Aktif
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                <Lock size={9} />
+                                PIN
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Guru / Pengajar */}
+                <div className="pt-2">
+                  <p className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <BookOpen size={11} className="text-blue-600" />
+                    Guru / Pengajar ({data.members.filter(m => {
+                      const r = (m.role || "").toLowerCase();
+                      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
+                    }).length})
+                  </p>
+                  <div className="space-y-1">
+                    {data.members.filter(m => {
+                      const r = (m.role || "").toLowerCase();
+                      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
+                    }).map((m) => {
+                      const isCurrent = currentUser.id === m.id || (currentUser.role === "guru" && currentUser.name === m.name);
+                      const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "GU";
+                      const avatar = getMemberAvatar(m.name);
+
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setShowRoleMenu(false);
+                            if (isCurrent) return;
+                            openMemberModal(m.id);
+                          }}
+                          className={`w-full flex items-center justify-between p-2 rounded-2xl text-left transition-all cursor-pointer ${
+                            isCurrent 
+                              ? 'bg-blue-50 border border-blue-200/90 text-blue-950 font-bold shadow-2xs' 
+                              : 'hover:bg-slate-50 text-slate-700 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
+                              {avatar ? (
+                                <img src={avatar} alt={m.name} className="w-full h-full object-cover" />
+                              ) : (
+                                initials
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold leading-tight truncate">{m.name}</p>
+                              <p className="text-[10px] text-slate-400 truncate">{m.role}</p>
+                            </div>
+                          </div>
+                          <div className="shrink-0 pl-1">
+                            {isCurrent ? (
+                              <span className="text-[9px] font-bold text-blue-700 bg-blue-100 border border-blue-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                <Check size={10} className="stroke-[3]" />
+                                Aktif
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                <Lock size={9} />
+                                PIN
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Action Buttons */}

@@ -6,10 +6,13 @@ import { useAppContext, PRESET_USERS, DEFAULT_ROLE_PINS, UserRole } from "@/cont
 
 export default function AdminAuthModal() {
   const { 
+    data,
     isAdminModalOpen, 
-    closeRoleModal, 
+    closeMemberModal, 
     verifyRolePin, 
-    authModalTargetRole 
+    verifyMemberPin,
+    authModalTargetRole,
+    authModalTargetMemberId
   } = useAppContext();
 
   const [pin, setPin] = useState("");
@@ -18,8 +21,17 @@ export default function AdminAuthModal() {
   const [isSuccess, setIsSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const targetRole: UserRole = authModalTargetRole || "admin";
-  const targetUser = PRESET_USERS.find(u => u.role === targetRole) || PRESET_USERS[0];
+  const targetMember = authModalTargetMemberId 
+    ? data.members.find(m => m.id === authModalTargetMemberId) 
+    : null;
+
+  const targetRole: UserRole = targetMember 
+    ? ((targetMember.role || "").toLowerCase().includes("admin") || (targetMember.role || "").toLowerCase().includes("inti") ? "admin" : (targetMember.role || "").toLowerCase().includes("kreatif") ? "kreatif" : "guru")
+    : (authModalTargetRole || "admin");
+
+  const displayName = targetMember ? targetMember.name : (PRESET_USERS.find(u => u.role === targetRole)?.name || "Pengguna");
+  const displayRole = targetMember ? targetMember.role : (PRESET_USERS.find(u => u.role === targetRole)?.roleLabel || "Peran");
+  const defaultPin = targetMember ? ((targetMember as any).pin || DEFAULT_ROLE_PINS[targetRole]) : DEFAULT_ROLE_PINS[targetRole];
 
   useEffect(() => {
     if (isAdminModalOpen) {
@@ -31,23 +43,26 @@ export default function AdminAuthModal() {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [isAdminModalOpen, targetRole]);
+  }, [isAdminModalOpen, authModalTargetMemberId, targetRole]);
 
   if (!isAdminModalOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pin.trim()) {
-      setErrorMsg(`Silakan masukkan PIN untuk ${targetUser.roleLabel}.`);
+      setErrorMsg(`Silakan masukkan PIN untuk ${displayName} (${displayRole}).`);
       return;
     }
 
-    const result = verifyRolePin(targetRole, pin.trim());
+    const result = targetMember 
+      ? verifyMemberPin(targetMember.id, pin.trim())
+      : verifyRolePin(targetRole, pin.trim());
+
     if (result.success) {
       setIsSuccess(true);
       setErrorMsg("");
       setTimeout(() => {
-        closeRoleModal();
+        closeMemberModal();
       }, 600);
     } else {
       setErrorMsg(result.message || "PIN tidak sesuai. Silakan coba lagi.");
@@ -84,8 +99,6 @@ export default function AdminAuthModal() {
     ? "from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 shadow-purple-600/25"
     : "from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-600/25";
 
-  const defaultPin = DEFAULT_ROLE_PINS[targetRole];
-
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div 
@@ -97,7 +110,7 @@ export default function AdminAuthModal() {
 
         {/* Close Button */}
         <button
-          onClick={closeRoleModal}
+          onClick={closeMemberModal}
           className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
           title="Tutup"
         >
@@ -124,14 +137,10 @@ export default function AdminAuthModal() {
                 <span className="text-[10px] font-bold text-slate-400">PIN Keamanan</span>
               </div>
               <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl mt-1 leading-snug">
-                Masuk sebagai {targetUser.name}
+                Masuk sebagai {displayName}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                {isTargetAdmin 
-                  ? "Akun Admin memiliki akses penuh atas semua tugas, materi konten, dan konfigurasi."
-                  : isTargetKreatif 
-                  ? "Akun Tim Kreatif untuk pengelolaan materi konten dakwah, naskah narasi, dan desain."
-                  : "Akun Guru untuk bimbingan santri, halaqah pembelajaran, dan checklist tugas kelas."}
+                Peran: <strong className="text-slate-700">{displayRole}</strong>
               </p>
             </div>
           </div>
@@ -140,7 +149,7 @@ export default function AdminAuthModal() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Masukkan PIN {targetUser.roleLabel}:
+                Masukkan PIN untuk {displayName}:
               </label>
               <div className="relative">
                 <input
@@ -183,7 +192,7 @@ export default function AdminAuthModal() {
               {isSuccess && (
                 <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 p-2.5 rounded-xl animate-in fade-in">
                   <CheckCircle2 size={15} className="shrink-0" />
-                  <span>PIN Benar! Mengalihkan ke {targetUser.name}...</span>
+                  <span>PIN Benar! Mengalihkan ke {displayName}...</span>
                 </div>
               )}
             </div>
@@ -196,7 +205,7 @@ export default function AdminAuthModal() {
                   PIN Bawaan: <span className="font-mono font-bold text-slate-800 bg-slate-200/80 px-1.5 py-0.2 rounded border border-slate-300">{defaultPin}</span>
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  Setiap peran memiliki PIN unik agar tidak terjadi perubahan yang tidak disengaja.
+                  Setiap ustadz dan tim memiliki PIN rahasia masing-masing yang dapat diatur di menu Pengaturan.
                 </p>
               </div>
             </div>
@@ -205,7 +214,7 @@ export default function AdminAuthModal() {
             <div className="pt-2 flex items-center gap-2.5">
               <button
                 type="button"
-                onClick={closeRoleModal}
+                onClick={closeMemberModal}
                 className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Batal

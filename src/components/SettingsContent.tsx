@@ -4,12 +4,13 @@ import { useState } from "react";
 import { 
   Settings, Moon, Sun, Bell, Shield, Database, Download, 
   Upload, Check, RefreshCw, KeyRound, Monitor, Smartphone, 
-  HelpCircle, Sparkles, CheckCircle2, ShieldCheck
+  HelpCircle, Sparkles, CheckCircle2, ShieldCheck, Users
 } from "lucide-react";
-import { useAppContext } from "@/context/AppContext";
+import { useAppContext, getMemberPin } from "@/context/AppContext";
+import { getMemberAvatar } from "@/utils/avatar";
 
 export default function SettingsContent() {
-  const { data, currentUser, switchUser, changeRolePin, openAdminModal, isAdminVerified } = useAppContext();
+  const { data, currentUser, switchUser, changeRolePin, changeMemberPin, openAdminModal, isAdminVerified } = useAppContext();
   const [activeSubTab, setActiveSubTab] = useState<"general" | "notifications" | "security" | "backup">("general");
 
   const isAdmin = currentUser.role === "admin" && isAdminVerified;
@@ -23,7 +24,14 @@ export default function SettingsContent() {
   const [contentReminder, setContentReminder] = useState(true);
 
   // Security State
-  const [targetPinRole, setTargetPinRole] = useState<"admin" | "kreatif" | "guru">("admin");
+  const [targetCategory, setTargetCategory] = useState<"admin" | "kreatif" | "guru">("guru");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(() => {
+    const guru = data.members.find(m => {
+      const r = (m.role || "").toLowerCase();
+      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
+    });
+    return guru ? guru.id : (data.members[0]?.id || "");
+  });
   const [oldPin, setOldPin] = useState("");
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -35,19 +43,29 @@ export default function SettingsContent() {
     setTimeout(() => setSaveSuccessMsg(""), 3500);
   };
 
+  const selectedMember = data.members.find(m => m.id === selectedMemberId) || data.members[0];
+
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedMember) {
+      setPinError("Silakan pilih anggota terlebih dahulu.");
+      return;
+    }
     if (newPin !== confirmPin) {
       setPinError("Konfirmasi PIN baru tidak cocok!");
       return;
     }
-    const res = changeRolePin(targetPinRole, oldPin, newPin);
+    if (newPin.length < 4) {
+      setPinError("PIN baru minimal 4 digit!");
+      return;
+    }
+    const res = changeMemberPin(selectedMember.id, newPin, oldPin);
     if (res.success) {
       setOldPin("");
       setNewPin("");
       setConfirmPin("");
       setPinError("");
-      triggerToast(res.message || "PIN Keamanan berhasil diperbarui!");
+      triggerToast(res.message || `PIN untuk ${selectedMember.name} berhasil diperbarui!`);
     } else {
       setPinError(res.message || "Gagal mengubah PIN.");
     }
@@ -334,69 +352,151 @@ export default function SettingsContent() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Box 1: Ubah PIN Akses Role */}
-              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 max-w-lg space-y-4 shadow-xs">
+              {/* Box 1: Kelola PIN Keamanan Tiap Anggota / Guru */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-4 shadow-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <KeyRound size={16} />
+                  <div className="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <KeyRound size={18} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-extrabold text-slate-900">Kelola PIN Keamanan Peran</h4>
-                    <p className="text-[11px] text-slate-500">Atur kode PIN rahasia untuk masing-masing bagian tim</p>
+                    <h4 className="text-sm font-extrabold text-slate-900">Kelola PIN Keamanan Anggota & Guru</h4>
+                    <p className="text-[11px] text-slate-500">Pilih individu tertentu untuk mengatur atau mengubah kode PIN rahasianya</p>
                   </div>
                 </div>
 
-                {/* Role Selector Tabs */}
-                <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => { setTargetPinRole("admin"); setPinError(""); }}
-                    className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                      targetPinRole === "admin"
-                        ? "bg-white text-emerald-700 shadow-2xs"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    🛡️ Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setTargetPinRole("kreatif"); setPinError(""); }}
-                    className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                      targetPinRole === "kreatif"
-                        ? "bg-white text-purple-700 shadow-2xs"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    🎨 Tim Kreatif
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setTargetPinRole("guru"); setPinError(""); }}
-                    className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                      targetPinRole === "guru"
-                        ? "bg-white text-blue-700 shadow-2xs"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    📚 Guru
-                  </button>
+                {/* Role Category Tabs */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">
+                    Kategori Tim:
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => { 
+                        setTargetCategory("admin"); 
+                        const first = data.members.find(m => (m.role || "").toLowerCase().includes("admin") || (m.role || "").toLowerCase().includes("inti"));
+                        if (first) setSelectedMemberId(first.id);
+                        setPinError(""); 
+                      }}
+                      className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                        targetCategory === "admin"
+                          ? "bg-white text-emerald-800 shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      🛡️ Admin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { 
+                        setTargetCategory("kreatif"); 
+                        const first = data.members.find(m => (m.role || "").toLowerCase().includes("kreatif"));
+                        if (first) setSelectedMemberId(first.id);
+                        setPinError(""); 
+                      }}
+                      className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                        targetCategory === "kreatif"
+                          ? "bg-white text-purple-800 shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      🎨 Tim Kreatif ({data.members.filter(m => (m.role || "").toLowerCase().includes("kreatif")).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { 
+                        setTargetCategory("guru"); 
+                        const first = data.members.find(m => !(m.role || "").toLowerCase().includes("admin") && !(m.role || "").toLowerCase().includes("kreatif"));
+                        if (first) setSelectedMemberId(first.id);
+                        setPinError(""); 
+                      }}
+                      className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                        targetCategory === "guru"
+                          ? "bg-white text-blue-800 shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      📚 Guru ({data.members.filter(m => !(m.role || "").toLowerCase().includes("admin") && !(m.role || "").toLowerCase().includes("kreatif")).length})
+                    </button>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 border border-slate-200/70 rounded-xl text-[11px] text-slate-600 flex items-center justify-between">
-                  <span>Target: <strong>{targetPinRole === "admin" ? "Admin / Tim Inti (Nukman)" : targetPinRole === "kreatif" ? "Tim Kreatif & Desain (Faruq)" : "Guru / Pengajar (Hammam)"}</strong></span>
-                  <span className="font-mono text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                    Bawaan: {targetPinRole === "admin" ? "123456" : targetPinRole === "kreatif" ? "222222" : "333333"}
-                  </span>
+                {/* Specific Member Dropdown Selector */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5 flex items-center justify-between">
+                    <span>Pilih Nama Anggota / Guru:</span>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      Tersedia {data.members.filter(m => {
+                        const r = (m.role || "").toLowerCase();
+                        if (targetCategory === "admin") return r.includes("admin") || r.includes("inti");
+                        if (targetCategory === "kreatif") return r.includes("kreatif");
+                        return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
+                      }).length} orang
+                    </span>
+                  </label>
+                  <select
+                    value={selectedMemberId}
+                    onChange={(e) => {
+                      setSelectedMemberId(e.target.value);
+                      setPinError("");
+                      setOldPin("");
+                      setNewPin("");
+                      setConfirmPin("");
+                    }}
+                    className="w-full text-xs font-bold p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {data.members.filter(m => {
+                      const r = (m.role || "").toLowerCase();
+                      if (targetCategory === "admin") return r.includes("admin") || r.includes("inti");
+                      if (targetCategory === "kreatif") return r.includes("kreatif");
+                      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
+                    }).map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} — {m.role} {(m as any).pin ? "(🔒 PIN Kustom Aktif)" : "(🔑 PIN Bawaan)"}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                <form onSubmit={handlePinSubmit} className="space-y-3">
+                {/* Selected Member Profile Card */}
+                {selectedMember && (
+                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 rounded-2xl ${selectedMember.color || 'bg-emerald-600'} text-white text-xs font-extrabold flex items-center justify-center shrink-0 shadow-xs overflow-hidden`}>
+                        {getMemberAvatar(selectedMember.name) ? (
+                          <img src={getMemberAvatar(selectedMember.name)!} alt={selectedMember.name} className="w-full h-full object-cover" />
+                        ) : (
+                          selectedMember.name?.slice(0, 2).toUpperCase() || "US"
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-extrabold text-slate-900 truncate">
+                          Target: {selectedMember.name}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">{selectedMember.role}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-xl border ${
+                        (selectedMember as any).pin 
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200" 
+                          : "bg-slate-100 text-slate-700 border-slate-200"
+                      }`}>
+                        {(selectedMember as any).pin ? "PIN Kustom Aktif" : `Bawaan: ${getMemberPin(selectedMember)}`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* PIN Form */}
+                <form onSubmit={handlePinSubmit} className="space-y-3.5 pt-1">
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">PIN Lama (Saat ini)</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      PIN Lama (Kosongkan jika admin mereset langsung)
+                    </label>
                     <input 
                       type="password"
-                      required
-                      placeholder={`Masukkan PIN lama (${targetPinRole === 'admin' ? '123456' : targetPinRole === 'kreatif' ? '222222' : '333333'})`}
+                      placeholder={`Masukkan PIN lama (Opsional / ${selectedMember ? getMemberPin(selectedMember) : '333333'})`}
                       value={oldPin}
                       onChange={(e) => setOldPin(e.target.value)}
                       className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
@@ -408,7 +508,7 @@ export default function SettingsContent() {
                     <input 
                       type="password"
                       required
-                      placeholder="Masukkan PIN baru"
+                      placeholder="Masukkan PIN baru khusus untuk orang ini"
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value)}
                       className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
@@ -428,28 +528,112 @@ export default function SettingsContent() {
                   </div>
 
                   {pinError && (
-                    <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                    <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200 animate-in fade-in">
                       {pinError}
                     </p>
                   )}
 
                   <button 
                     type="submit"
-                    className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer"
+                    className="flex items-center justify-center gap-2 text-xs font-bold w-full py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md transition-colors cursor-pointer"
                   >
                     <Check size={14} />
-                    <span>Simpan PIN {targetPinRole === "admin" ? "Admin" : targetPinRole === "kreatif" ? "Kreatif" : "Guru"}</span>
+                    <span>Simpan PIN untuk {selectedMember?.name || "Anggota"}</span>
                   </button>
                 </form>
               </div>
 
+              {/* Box 2: Daftar Lengkap Status PIN Seluruh Anggota Madrasah */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-4 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Users size={15} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-slate-900">
+                        Status PIN Seluruh Anggota ({data.members.length} Orang)
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        Klik tombol "Atur PIN" untuk mengganti PIN individu yang diinginkan
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto pr-1">
+                  {data.members.map((m) => {
+                    const isTarget = m.id === selectedMemberId;
+                    const hasCustom = Boolean((m as any).pin);
+                    const currentPinVal = getMemberPin(m);
+
+                    return (
+                      <div 
+                        key={m.id} 
+                        className={`py-2.5 px-3 flex items-center justify-between gap-3 rounded-2xl transition-all ${
+                          isTarget 
+                            ? "bg-emerald-50/80 border border-emerald-200/80 shadow-2xs" 
+                            : "hover:bg-slate-50 border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-8 h-8 rounded-full ${m.color || 'bg-slate-500'} text-white text-[10px] font-bold flex items-center justify-center shrink-0 overflow-hidden`}>
+                            {getMemberAvatar(m.name) ? (
+                              <img src={getMemberAvatar(m.name)!} alt={m.name} className="w-full h-full object-cover" />
+                            ) : (
+                              m.name?.slice(0, 2).toUpperCase()
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 leading-tight truncate">{m.name}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{m.role}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border ${
+                            hasCustom 
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200" 
+                              : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}>
+                            {hasCustom ? "PIN Kustom" : `Bawaan: ${currentPinVal}`}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedMemberId(m.id);
+                              const r = (m.role || "").toLowerCase();
+                              if (r.includes("admin") || r.includes("inti")) setTargetCategory("admin");
+                              else if (r.includes("kreatif")) setTargetCategory("kreatif");
+                              else setTargetCategory("guru");
+                              setPinError("");
+                              setOldPin("");
+                              setNewPin("");
+                              setConfirmPin("");
+                            }}
+                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                              isTarget 
+                                ? "bg-emerald-600 text-white shadow-2xs" 
+                                : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                            }`}
+                          >
+                            {isTarget ? "Dipilih" : "Atur PIN"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Status Info */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 max-w-lg">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 max-w-xl">
                 <p className="font-bold text-slate-800 flex items-center gap-1.5 mb-1">
-                  🛡️ Proteksi Multi-Role Aktif
+                  🛡️ Proteksi Akun Mandiri Aktif
                 </p>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Setiap peran dikunci dengan PIN mandiri. Anggota atau guru tidak dapat berpindah role tanpa memasukkan PIN bagian tersebut, sehingga data aman dari kesalahan pencet atau perubahan yang tidak diinginkan.
+                  Setiap ustadz dan anggota tim kreatif memiliki akun dan PIN mandiri. Admin dapat mengelola atau mereset PIN setiap guru secara individual tanpa memengaruhi guru lainnya.
                 </p>
               </div>
             </div>

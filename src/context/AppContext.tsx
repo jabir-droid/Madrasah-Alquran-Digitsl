@@ -64,6 +64,55 @@ export const ROLE_STORAGE_KEYS: Record<UserRole, string> = {
   guru: "mqd_guru_pin"
 };
 
+export function memberToCurrentUser(m: any): CurrentUser {
+  const normRole = (m.role || "").toLowerCase();
+  const role: UserRole = (normRole.includes("admin") || normRole.includes("inti"))
+    ? "admin"
+    : normRole.includes("kreatif")
+    ? "kreatif"
+    : "guru";
+
+  const roleLabel = role === "admin" 
+    ? "Admin / Tim Inti" 
+    : role === "kreatif" 
+    ? "Tim Kreatif & Desain" 
+    : "Guru / Pengajar";
+
+  const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "AG";
+  const avatarBg = m.color || (role === "admin" ? "bg-emerald-500" : role === "kreatif" ? "bg-purple-600" : "bg-blue-600");
+
+  return {
+    id: m.id,
+    name: m.name,
+    fullName: m.fullName || `${m.name} Al-Hafizh`,
+    role: role,
+    roleLabel: roleLabel,
+    email: m.email || `${m.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@madrasahquran.id`,
+    avatarBg: avatarBg,
+    initials: initials,
+    bio: m.bio || (role === "admin" 
+      ? "Koordinator utama ruang kerja digital madrasah."
+      : role === "kreatif"
+      ? "Spesialis produksi media dakwah dan konten madrasah."
+      : "Pendidik Al-Qur'an dan tahsin madrasah.")
+  };
+}
+
+export function getMemberPin(m: any): string {
+  if (m.pin) return String(m.pin);
+  if (m.password) return String(m.password);
+  
+  if (typeof window !== "undefined") {
+    const localSaved = localStorage.getItem(`mqd_pin_${m.id}`);
+    if (localSaved) return localSaved;
+  }
+
+  const normRole = (m.role || "").toLowerCase();
+  if (normRole.includes("admin") || normRole.includes("inti")) return "123456";
+  if (normRole.includes("kreatif")) return "222222";
+  return "333333";
+}
+
 type AppState = typeof dbData;
 
 interface AppContextType {
@@ -72,15 +121,20 @@ interface AppContextType {
   isAdminVerified: boolean;
   isAdminModalOpen: boolean;
   authModalTargetRole: UserRole | null;
+  authModalTargetMemberId: string | null;
   syncStatus: "synced" | "syncing" | "error";
   syncNow: () => Promise<void>;
-  switchUser: (role: UserRole) => void;
+  switchUser: (roleOrMemberId: string) => void;
   openAdminModal: (onSuccess?: () => void) => void;
   closeAdminModal: () => void;
   openRoleModal: (role: UserRole, onSuccess?: () => void) => void;
   closeRoleModal: () => void;
+  openMemberModal: (memberId: string, onSuccess?: () => void) => void;
+  closeMemberModal: () => void;
   verifyRolePin: (role: UserRole, pin: string) => { success: boolean; message?: string };
   changeRolePin: (role: UserRole, oldPin: string, newPin: string) => { success: boolean; message?: string };
+  verifyMemberPin: (memberId: string, pin: string) => { success: boolean; message?: string };
+  changeMemberPin: (memberId: string, newPin: string, oldPin?: string) => { success: boolean; message?: string };
   verifyAdminPin: (pin: string) => { success: boolean; message?: string };
   changeAdminPin: (oldPin: string, newPin: string) => { success: boolean; message?: string };
   lockAdmin: () => void;
@@ -110,6 +164,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isAdminVerified, setIsAdminVerified] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [authModalTargetRole, setAuthModalTargetRole] = useState<UserRole | null>(null);
+  const [authModalTargetMemberId, setAuthModalTargetMemberId] = useState<string | null>(null);
   const [adminSuccessCallback, setAdminSuccessCallback] = useState<(() => void) | null>(null);
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error">("synced");
 
@@ -123,42 +178,161 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedUser = localStorage.getItem("mqd_current_user");
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
-        if (parsed && parsed.role) {
+        if (parsed && parsed.id) {
           // If saved user was admin but not verified in this session, fallback to faruq
           if (parsed.role === "admin" && !isVerified) {
             setCurrentUser(PRESET_USERS[1]);
           } else {
-            const match = PRESET_USERS.find(u => u.role === parsed.role);
-            if (match) setCurrentUser(match);
+            // Check if saved user matches member in data.members
+            const memberMatch = data.members.find(m => m.id === parsed.id);
+            if (memberMatch) {
+              setCurrentUser(memberToCurrentUser(memberMatch));
+            } else {
+              const presetMatch = PRESET_USERS.find(u => u.role === parsed.role);
+              if (presetMatch) setCurrentUser(presetMatch);
+            }
           }
         }
       }
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [data.members]);
 
   const openAdminModal = (onSuccess?: () => void) => {
     openRoleModal("admin", onSuccess);
   };
 
   const closeAdminModal = () => {
-    closeRoleModal();
+    closeMemberModal();
   };
 
   const openRoleModal = (role: UserRole, onSuccess?: () => void) => {
     setAdminSuccessCallback(() => onSuccess || null);
     setAuthModalTargetRole(role);
+    // Find representative member
+    const m = data.members.find(x => {
+      const r = (x.role || "").toLowerCase();
+      if (role === "admin") return r.includes("admin") || r.includes("inti");
+      if (role === "kreatif") return r.includes("kreatif");
+      return !r.includes("admin") && !r.includes("kreatif");
+    });
+    setAuthModalTargetMemberId(m ? m.id : null);
     setIsAdminModalOpen(true);
   };
 
   const closeRoleModal = () => {
+    closeMemberModal();
+  };
+
+  const openMemberModal = (memberId: string, onSuccess?: () => void) => {
+    setAdminSuccessCallback(() => onSuccess || null);
+    setAuthModalTargetMemberId(memberId);
+    const m = data.members.find(x => x.id === memberId);
+    if (m) {
+      const u = memberToCurrentUser(m);
+      setAuthModalTargetRole(u.role);
+    }
+    setIsAdminModalOpen(true);
+  };
+
+  const closeMemberModal = () => {
     setIsAdminModalOpen(false);
+    setAuthModalTargetMemberId(null);
     setAuthModalTargetRole(null);
     setAdminSuccessCallback(null);
   };
 
-  const verifyRolePin = (targetRole: UserRole, inputPin: string) => {
+  const verifyMemberPin = (memberId: string, inputPin: string): { success: boolean; message?: string } => {
+    const member = data.members.find(m => m.id === memberId);
+    if (!member) {
+      return verifyRolePin(memberId as UserRole, inputPin);
+    }
+
+    const expectedPin = getMemberPin(member);
+    if (inputPin === expectedPin) {
+      const u = memberToCurrentUser(member);
+      if (u.role === "admin") {
+        setIsAdminVerified(true);
+        localStorage.setItem("mqd_admin_verified", "true");
+      } else {
+        setIsAdminVerified(false);
+        localStorage.removeItem("mqd_admin_verified");
+      }
+
+      setCurrentUser(u);
+      localStorage.setItem("mqd_current_user", JSON.stringify(u));
+      localStorage.setItem("mqd_user_profile", JSON.stringify({
+        name: u.name,
+        fullName: u.fullName,
+        role: u.roleLabel,
+        email: u.email,
+        phone: "+62 812-8899-7721",
+        location: "Jakarta, Indonesia",
+        joinDate: "Januari 2024",
+        bio: u.bio,
+        specializations: u.role === "admin" 
+          ? ["Manajemen Proyek Dakwah", "Pengaturan Sistem", "Evaluasi Kinerja"] 
+          : u.role === "kreatif"
+          ? ["Kreator Konten & Naskah", "Editing Desain Grafis", "Sosial Media Dakwah"]
+          : ["Pengajaran Al-Qur'an", "Tahsin & Tajwid", "Evaluasi Santri"]
+      }));
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("mqd_profile_updated"));
+      }
+
+      if (adminSuccessCallback) {
+        adminSuccessCallback();
+      }
+      return { success: true };
+    } else {
+      return { 
+        success: false, 
+        message: `PIN untuk ${member.name} (${member.role}) tidak sesuai.` 
+      };
+    }
+  };
+
+  const changeMemberPin = (memberId: string, newPin: string, oldPin?: string) => {
+    const member = data.members.find(m => m.id === memberId);
+    if (!member) return { success: false, message: "Anggota tidak ditemukan." };
+
+    if (!isAdminVerified && oldPin) {
+      const currentPin = getMemberPin(member);
+      if (oldPin !== currentPin) {
+        return { success: false, message: "PIN lama tidak sesuai." };
+      }
+    }
+
+    if (!newPin || newPin.length < 4) {
+      return { success: false, message: "PIN baru minimal 4 digit." };
+    }
+
+    const updatedMembers = data.members.map(m => 
+      m.id === memberId ? { ...m, pin: newPin } : m
+    );
+    saveData({ ...data, members: updatedMembers });
+
+    try {
+      localStorage.setItem(`mqd_pin_${memberId}`, newPin);
+    } catch {}
+
+    return { success: true, message: `PIN untuk ${member.name} (${member.role}) berhasil diperbarui!` };
+  };
+
+  const verifyRolePin = (targetRole: UserRole, inputPin: string): { success: boolean; message?: string } => {
+    const member = data.members.find(x => {
+      const r = (x.role || "").toLowerCase();
+      if (targetRole === "admin") return r.includes("admin") || r.includes("inti");
+      if (targetRole === "kreatif") return r.includes("kreatif");
+      return !r.includes("admin") && !r.includes("kreatif");
+    });
+
+    if (member) {
+      return verifyMemberPin(member.id, inputPin);
+    }
+
     try {
       const storageKey = ROLE_STORAGE_KEYS[targetRole];
       const storedPin = localStorage.getItem(storageKey) || DEFAULT_ROLE_PINS[targetRole];
@@ -232,13 +406,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const switchUser = (role: UserRole) => {
-    if (role === currentUser.role) return;
+  const switchUser = (roleOrMemberId: string) => {
+    // Check if it's a memberId
+    const member = data.members.find(m => m.id === roleOrMemberId);
+    if (member) {
+      if (member.id === currentUser.id) return;
+      openMemberModal(member.id);
+      return;
+    }
 
-    // Switching into any role requires PIN verification for that role
-    openRoleModal(role, () => {
-      performSwitch(role);
-    });
+    // Otherwise it's a role
+    const role = roleOrMemberId as UserRole;
+    if (role === currentUser.role) return;
+    openRoleModal(role);
   };
 
   const performSwitch = (role: UserRole) => {
@@ -553,12 +733,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isAdminVerified,
       isAdminModalOpen,
       authModalTargetRole,
+      authModalTargetMemberId,
       openAdminModal,
       closeAdminModal,
       openRoleModal,
       closeRoleModal,
+      openMemberModal,
+      closeMemberModal,
       verifyRolePin,
       changeRolePin,
+      verifyMemberPin,
+      changeMemberPin,
       verifyAdminPin,
       changeAdminPin,
       lockAdmin,
