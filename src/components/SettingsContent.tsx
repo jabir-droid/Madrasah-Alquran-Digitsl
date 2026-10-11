@@ -375,7 +375,7 @@ export default function SettingsContent() {
           ) : (
             <div className="space-y-6">
               {/* Box 1: Kelola PIN Keamanan Tiap Anggota / Guru */}
-              <div className="p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-5 shadow-xs">
+              <div className="p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/90 max-w-2xl space-y-5 shadow-xs">
                 {/* Header Title */}
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
@@ -455,7 +455,7 @@ export default function SettingsContent() {
                     </span>
                   </label>
 
-                  <div className={`grid gap-2 ${currentCategoryMembers.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                  <div className="space-y-2">
                     {currentCategoryMembers.map((m) => {
                       const isSelected = m.id === selectedMember?.id;
                       const hasCustom = Boolean((m as any).pin);
@@ -472,14 +472,14 @@ export default function SettingsContent() {
                             setNewPin("");
                             setConfirmPin("");
                           }}
-                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                          className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
                             isSelected
-                              ? "bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
-                              : "bg-slate-50/60 border-slate-200/80 hover:bg-slate-100/80 hover:border-slate-300"
+                              ? "bg-emerald-50/95 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
+                              : "bg-slate-50/70 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300"
                           }`}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className={`w-9 h-9 rounded-xl ${m.color || 'bg-emerald-600'} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs overflow-hidden`}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-10 h-10 rounded-2xl ${m.color || 'bg-emerald-600'} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs overflow-hidden`}>
                               {getMemberAvatar(m.name) ? (
                                 <img src={getMemberAvatar(m.name)!} alt={m.name} className="w-full h-full object-cover" />
                               ) : (
@@ -487,25 +487,27 @@ export default function SettingsContent() {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-extrabold text-slate-900 leading-tight truncate flex items-center gap-1.5">
-                                {m.name}
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                                  {m.name}
+                                </span>
                                 {isSelected && (
-                                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-emerald-600 text-white">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white shrink-0 shadow-2xs">
                                     ✓ Dipilih
                                   </span>
                                 )}
-                              </p>
-                              <p className="text-[10px] text-slate-400 truncate mt-0.5">{m.role}</p>
+                              </div>
+                              <p className="text-[11px] text-slate-500 mt-0.5">{m.role}</p>
                             </div>
                           </div>
 
                           <div className="shrink-0 text-right">
-                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+                            <span className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-xl border inline-block whitespace-nowrap ${
                               hasCustom 
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-300" 
-                                : "bg-white text-slate-600 border-slate-200"
+                                : "bg-white text-slate-600 border-slate-200 shadow-2xs"
                             }`}>
-                              {hasCustom ? "PIN Kustom" : `Bawaan: ${currentPinVal}`}
+                              {hasCustom ? "🔒 PIN Kustom" : `🔑 Bawaan: ${currentPinVal}`}
                             </span>
                           </div>
                         </button>
@@ -608,7 +610,7 @@ export default function SettingsContent() {
               </div>
 
               {/* Box 2: Daftar Lengkap Status PIN Seluruh Anggota Madrasah */}
-              <div className="p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-4 shadow-xs">
+              <div className="p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/90 max-w-2xl space-y-4 shadow-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
