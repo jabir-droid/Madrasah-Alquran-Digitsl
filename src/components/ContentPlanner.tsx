@@ -1,4 +1,4 @@
-import { Search, Plus, List, KanbanSquare, ChevronRight, FileCode2, FileVideo2, Layers, Smartphone, ShieldCheck } from "lucide-react";
+import { Search, Plus, List, KanbanSquare, ChevronRight, FileCode2, FileVideo2, Layers, Smartphone, ShieldCheck, Lock } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { useState } from "react";
 
@@ -47,14 +47,14 @@ export default function ContentPlanner() {
       
       {/* Role Notice Banner */}
       {isGuru ? (
-        <div className="mb-5 p-3.5 px-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
+        <div className="mb-5 p-3.5 px-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
           <div className="flex items-center gap-2.5">
-            <span className="text-lg">📚</span>
+            <Lock size={16} className="text-slate-500 shrink-0" />
             <span>
-              <strong>Ruang Kolaborasi Guru & Pengajar:</strong> Anda memiliki akses penuh menyusun materi kurikulum dakwah, caption naskah, dan berkolaborasi bersama Tim Kreatif.
+              <strong>Mode Guru (Hanya Lihat):</strong> Anda dapat melihat kurikulum dan materi dakwah. Pembuatan, pengubahan, dan publikasi konten dikelola oleh Tim Kreatif & Admin.
             </span>
           </div>
-          <span className="text-[11px] font-bold bg-white px-2.5 py-1 rounded-full border border-sky-200 text-sky-700 shrink-0">
+          <span className="text-[11px] font-bold bg-white px-2.5 py-1 rounded-full border border-slate-200 text-slate-700 shrink-0">
             Guru: {currentUser.name}
           </span>
         </div>
@@ -202,15 +202,17 @@ export default function ContentPlanner() {
             </div>
             <div className="px-6 py-4 border-t border-slate-100 bg-white flex justify-end gap-3">
                <button onClick={() => setIsAddingContent(false)} className="px-6 py-2.5 text-slate-600 font-bold text-sm bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-xs cursor-pointer">
-                 Batal
+                 {isGuru ? "Tutup" : "Batal"}
                </button>
-               <button onClick={() => {
-                 if(!formData.title) { alert("Judul materi wajib diisi!"); return; }
-                 saveContent(formData);
-                 setIsAddingContent(false);
-               }} className="px-6 py-2.5 text-white font-bold text-sm bg-brand-600 rounded-xl hover:bg-brand-700 transition-colors shadow-xs cursor-pointer">
-                 Simpan Materi Konten
-               </button>
+               {!isGuru && (
+                 <button onClick={() => {
+                   if(!formData.title) { alert("Judul materi wajib diisi!"); return; }
+                   saveContent(formData);
+                   setIsAddingContent(false);
+                 }} className="px-6 py-2.5 text-white font-bold text-sm bg-brand-600 rounded-xl hover:bg-brand-700 transition-colors shadow-xs cursor-pointer">
+                   Simpan Materi Konten
+                 </button>
+               )}
             </div>
           </div>
         </div>
@@ -272,15 +274,21 @@ export default function ContentPlanner() {
               <option>Doing</option>
               <option>Published</option>
             </select>
-            <button 
-              onClick={() => {
-                setFormData({ id: '', title: '', status: 'Todo', priority: 'normal', type: 'Carousel', pic: '', dueDate: '', assetUrl: '', content: '' });
-                setIsAddingContent(true);
-              }} 
-              className="bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition-colors shadow-xs cursor-pointer"
-            >
-              <Plus size={18} /> Tambah Materi
-            </button>
+            {!isGuru ? (
+              <button 
+                onClick={() => {
+                  setFormData({ id: '', title: '', status: 'Todo', priority: 'normal', type: 'Carousel', pic: '', dueDate: '', assetUrl: '', content: '' });
+                  setIsAddingContent(true);
+                }} 
+                className="bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 transition-colors shadow-xs cursor-pointer"
+              >
+                <Plus size={18} /> Tambah Materi
+              </button>
+            ) : (
+              <span className="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                🔒 Mode Guru: Hanya Lihat
+              </span>
+            )}
           </div>
         </div>
 
@@ -337,8 +345,9 @@ export default function ContentPlanner() {
                     <td className="px-6 py-4">
                       <select 
                         value={item.status} 
+                        disabled={isGuru}
                         onChange={(e) => updateContentStatus(item.id, e.target.value)}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border appearance-none pr-8 bg-no-repeat outline-none capitalize ${item.sColor} cursor-pointer`} 
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border appearance-none pr-8 bg-no-repeat outline-none capitalize ${item.sColor} ${isGuru ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`} 
                         style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em'}}
                       >
                         <option value="Todo">Todo</option>
@@ -350,9 +359,15 @@ export default function ContentPlanner() {
                       <span className={`text-sm font-semibold text-slate-600`}>{item.dueDate || '-'}</span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button onClick={() => removeContent(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer">
-                        <TrashIcon size={16} />
-                      </button>
+                      {!isGuru ? (
+                        <button onClick={() => removeContent(item.id)} title="Hapus materi" className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer">
+                          <TrashIcon size={16} />
+                        </button>
+                      ) : (
+                        <span className="text-slate-400" title="Mode Guru: Tidak dapat menghapus">
+                          <Lock size={14} className="inline" />
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

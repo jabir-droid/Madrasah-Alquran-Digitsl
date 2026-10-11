@@ -52,6 +52,18 @@ export const PRESET_USERS: CurrentUser[] = [
   }
 ];
 
+export const DEFAULT_ROLE_PINS: Record<UserRole, string> = {
+  admin: "123456",
+  kreatif: "222222",
+  guru: "333333"
+};
+
+export const ROLE_STORAGE_KEYS: Record<UserRole, string> = {
+  admin: "mqd_admin_pin",
+  kreatif: "mqd_kreatif_pin",
+  guru: "mqd_guru_pin"
+};
+
 type AppState = typeof dbData;
 
 interface AppContextType {
@@ -59,11 +71,16 @@ interface AppContextType {
   currentUser: CurrentUser;
   isAdminVerified: boolean;
   isAdminModalOpen: boolean;
+  authModalTargetRole: UserRole | null;
   syncStatus: "synced" | "syncing" | "error";
   syncNow: () => Promise<void>;
   switchUser: (role: UserRole) => void;
   openAdminModal: (onSuccess?: () => void) => void;
   closeAdminModal: () => void;
+  openRoleModal: (role: UserRole, onSuccess?: () => void) => void;
+  closeRoleModal: () => void;
+  verifyRolePin: (role: UserRole, pin: string) => { success: boolean; message?: string };
+  changeRolePin: (role: UserRole, oldPin: string, newPin: string) => { success: boolean; message?: string };
   verifyAdminPin: (pin: string) => { success: boolean; message?: string };
   changeAdminPin: (oldPin: string, newPin: string) => { success: boolean; message?: string };
   lockAdmin: () => void;
@@ -92,6 +109,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser>(PRESET_USERS[1]);
   const [isAdminVerified, setIsAdminVerified] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [authModalTargetRole, setAuthModalTargetRole] = useState<UserRole | null>(null);
   const [adminSuccessCallback, setAdminSuccessCallback] = useState<(() => void) | null>(null);
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error">("synced");
 
@@ -121,53 +139,80 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const openAdminModal = (onSuccess?: () => void) => {
-    setAdminSuccessCallback(() => onSuccess || null);
-    setIsAdminModalOpen(true);
+    openRoleModal("admin", onSuccess);
   };
 
   const closeAdminModal = () => {
+    closeRoleModal();
+  };
+
+  const openRoleModal = (role: UserRole, onSuccess?: () => void) => {
+    setAdminSuccessCallback(() => onSuccess || null);
+    setAuthModalTargetRole(role);
+    setIsAdminModalOpen(true);
+  };
+
+  const closeRoleModal = () => {
     setIsAdminModalOpen(false);
+    setAuthModalTargetRole(null);
     setAdminSuccessCallback(null);
   };
 
-  const verifyAdminPin = (inputPin: string) => {
+  const verifyRolePin = (targetRole: UserRole, inputPin: string) => {
     try {
-      const storedPin = localStorage.getItem("mqd_admin_pin") || "123456";
+      const storageKey = ROLE_STORAGE_KEYS[targetRole];
+      const storedPin = localStorage.getItem(storageKey) || DEFAULT_ROLE_PINS[targetRole];
       if (inputPin === storedPin) {
-        setIsAdminVerified(true);
-        localStorage.setItem("mqd_admin_verified", "true");
-        
-        // Switch user to Admin
-        const adminUser = PRESET_USERS[0];
-        setCurrentUser(adminUser);
-        localStorage.setItem("mqd_current_user", JSON.stringify(adminUser));
+        if (targetRole === "admin") {
+          setIsAdminVerified(true);
+          localStorage.setItem("mqd_admin_verified", "true");
+        } else {
+          setIsAdminVerified(false);
+          localStorage.removeItem("mqd_admin_verified");
+        }
+
+        performSwitch(targetRole);
 
         if (adminSuccessCallback) {
           adminSuccessCallback();
         }
         return { success: true };
       } else {
-        return { success: false, message: "PIN Admin tidak sesuai. Coba 123456." };
+        const roleLabel = PRESET_USERS.find(u => u.role === targetRole)?.roleLabel || targetRole;
+        return { 
+          success: false, 
+          message: `PIN untuk ${roleLabel} tidak sesuai. PIN bawaan: ${DEFAULT_ROLE_PINS[targetRole]}` 
+        };
       }
     } catch (e) {
       return { success: false, message: "Terjadi kesalahan verifikasi." };
     }
   };
 
-  const changeAdminPin = (oldPin: string, newPin: string) => {
+  const changeRolePin = (role: UserRole, oldPin: string, newPin: string) => {
     try {
-      const storedPin = localStorage.getItem("mqd_admin_pin") || "123456";
+      const storageKey = ROLE_STORAGE_KEYS[role];
+      const storedPin = localStorage.getItem(storageKey) || DEFAULT_ROLE_PINS[role];
       if (oldPin !== storedPin) {
         return { success: false, message: "PIN lama tidak sesuai." };
       }
       if (!newPin || newPin.length < 4) {
         return { success: false, message: "PIN baru minimal 4 karakter/digit." };
       }
-      localStorage.setItem("mqd_admin_pin", newPin);
-      return { success: true, message: "PIN Admin berhasil diperbarui!" };
+      localStorage.setItem(storageKey, newPin);
+      const roleName = PRESET_USERS.find(u => u.role === role)?.roleLabel || role;
+      return { success: true, message: `PIN untuk ${roleName} berhasil diperbarui!` };
     } catch (e) {
       return { success: false, message: "Gagal menyimpan PIN." };
     }
+  };
+
+  const verifyAdminPin = (inputPin: string) => {
+    return verifyRolePin("admin", inputPin);
+  };
+
+  const changeAdminPin = (oldPin: string, newPin: string) => {
+    return changeRolePin("admin", oldPin, newPin);
   };
 
   const lockAdmin = () => {
@@ -188,23 +233,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchUser = (role: UserRole) => {
-    if (role === "admin") {
-      if (!isAdminVerified) {
-        openAdminModal(() => {
-          performSwitch("admin");
-        });
-        return;
-      }
-    } else {
-      // Switching to non-admin locks admin privileges
-      setIsAdminVerified(false);
-      try {
-        localStorage.removeItem("mqd_admin_verified");
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    performSwitch(role);
+    if (role === currentUser.role) return;
+
+    // Switching into any role requires PIN verification for that role
+    openRoleModal(role, () => {
+      performSwitch(role);
+    });
   };
 
   const performSwitch = (role: UserRole) => {
@@ -518,8 +552,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser,
       isAdminVerified,
       isAdminModalOpen,
+      authModalTargetRole,
       openAdminModal,
       closeAdminModal,
+      openRoleModal,
+      closeRoleModal,
+      verifyRolePin,
+      changeRolePin,
       verifyAdminPin,
       changeAdminPin,
       lockAdmin,

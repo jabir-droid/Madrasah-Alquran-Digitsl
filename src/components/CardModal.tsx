@@ -9,7 +9,7 @@ interface CardModalProps {
 }
 
 export default function CardModal({ card, defaultColumnId, onClose }: CardModalProps) {
-  const { data, saveCard, removeCard } = useAppContext();
+  const { data, saveCard, removeCard, currentUser } = useAppContext();
   
   const [formData, setFormData] = useState<any>({
     id: card?.id || "card_" + Date.now(),
@@ -201,18 +201,22 @@ export default function CardModal({ card, defaultColumnId, onClose }: CardModalP
         </div>
 
         <div className="p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50">
-          <div>
-            {card && (
+            {card && currentUser.role === "admin" && (
               <button onClick={() => {
                 if (window.confirm("Yakin ingin menghapus tugas ini?")) {
                   removeCard(card.id);
                   onClose();
                 }
-              }} className="text-red-500 font-bold text-sm hover:text-red-600 px-2 py-2 transition-colors">
-                Hapus
+              }} className="text-red-500 font-bold text-sm hover:text-red-600 px-2 py-2 transition-colors cursor-pointer flex items-center gap-1.5">
+                <Trash2 size={15} />
+                <span>Hapus Tugas</span>
               </button>
             )}
-          </div>
+            {card && currentUser.role !== "admin" && (
+              <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                🔒 Hanya Admin yang dapat menghapus tugas
+              </span>
+            )}
           <div className="flex items-center gap-3">
             <button onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Batal</button>
             <button onClick={handleSave} className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">Simpan</button>

@@ -1,4 +1,4 @@
-import { Edit3, Eye, Trash2, CalendarDays, BookOpen, Link as LinkIcon, Plus, Book } from "lucide-react";
+import { Edit3, Eye, Trash2, CalendarDays, BookOpen, Link as LinkIcon, Plus, Book, Lock } from "lucide-react";
 import { useState } from "react";
 import db from "@/data/db.json";
 import { useAppContext } from "@/context/AppContext";
@@ -7,8 +7,9 @@ export default function NotesContent() {
   const [tab, setTab] = useState("rapat");
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({ id: "", title: "", date: "", category: "", content: "", pic: "", url: "" });
-  const { data, addNote, saveNote, removeNote } = useAppContext();
+  const { data, addNote, saveNote, removeNote, currentUser } = useAppContext();
 
+  const isAdmin = currentUser.role === "admin";
   const notes = data.notes.sort((a, b) => b.createdAt - a.createdAt);
   const links = data.links;
   const sops = data.sops;
@@ -159,9 +160,16 @@ export default function NotesContent() {
         </button>
       </div>
 
-      <button onClick={handleAdd} className="w-full py-4 border-2 border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50 rounded-2xl flex items-center justify-center gap-2 text-brand-600 font-bold mb-8 transition-colors bg-white">
-        <Plus size={18} /> Tambah Data Baru
-      </button>
+      {tab === "sop" && !isAdmin ? (
+        <div className="w-full py-3 px-4 border border-slate-200 bg-slate-50 rounded-2xl flex items-center justify-center gap-2 text-slate-600 text-xs font-bold mb-8">
+          <Lock size={14} className="text-slate-500" />
+          <span>SOP Operasional dikelola resmi oleh Admin (Mode Baca untuk Anggota & Guru)</span>
+        </div>
+      ) : (
+        <button onClick={handleAdd} className="w-full py-4 border-2 border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50 rounded-2xl flex items-center justify-center gap-2 text-brand-600 font-bold mb-8 transition-colors bg-white cursor-pointer">
+          <Plus size={18} /> Tambah Data Baru
+        </button>
+      )}
 
       {tab === "rapat" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -196,8 +204,10 @@ export default function NotesContent() {
                       url: ""
                     });
                     setIsAdding(true);
-                  }} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-colors"><Edit3 size={14}/></button>
-                  <button onClick={() => removeNote(note.id, tab)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"><Trash2 size={14}/></button>
+                  }} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-colors cursor-pointer"><Edit3 size={14}/></button>
+                  {isAdmin && (
+                    <button onClick={() => removeNote(note.id, tab)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors cursor-pointer"><Trash2 size={14}/></button>
+                  )}
                 </div>
               </div>
               <div className="text-sm text-slate-600 leading-relaxed line-clamp-3 mt-auto" dangerouslySetInnerHTML={{__html: note.content || '<em>Tidak ada isi catatan</em>'}} />
@@ -217,20 +227,28 @@ export default function NotesContent() {
                    <p className="text-xs text-slate-500 font-bold bg-slate-100 inline-block px-2 py-0.5 rounded-full">{sop.category || "General"}</p>
                  </div>
                </div>
-               <button onClick={() => {
-                 const cSop = sop as any;
-                 setFormData({
-                   id: cSop.id,
-                   title: cSop.title,
-                   date: "",
-                   category: cSop.category || "",
-                   content: cSop.content || "",
-                   pic: cSop.pic || "",
-                   url: ""
-                 });
-                 setIsAdding(true);
-               }} className="text-slate-300 hover:text-brand-600 opacity-0 group-hover:opacity-100 transition-all mr-2"><Edit3 size={18}/></button>
-               <button onClick={() => removeNote(sop.id, tab)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={18}/></button>
+               <div className="flex items-center gap-1">
+                 {isAdmin ? (
+                   <>
+                     <button onClick={() => {
+                       const cSop = sop as any;
+                       setFormData({
+                         id: cSop.id,
+                         title: cSop.title,
+                         date: "",
+                         category: cSop.category || "",
+                         content: cSop.content || "",
+                         pic: cSop.pic || "",
+                         url: ""
+                       });
+                       setIsAdding(true);
+                     }} className="text-slate-400 hover:text-brand-600 opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-lg hover:bg-brand-50"><Edit3 size={16}/></button>
+                     <button onClick={() => removeNote(sop.id, tab)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-lg hover:bg-red-50"><Trash2 size={16}/></button>
+                   </>
+                 ) : (
+                   <span className="text-xs font-semibold text-slate-400 px-2 py-1">Baca SOP</span>
+                 )}
+               </div>
              </div>
           ))}
         </div>

@@ -9,7 +9,7 @@ import {
 import { useAppContext } from "@/context/AppContext";
 
 export default function SettingsContent() {
-  const { data, currentUser, switchUser, changeAdminPin, openAdminModal, isAdminVerified } = useAppContext();
+  const { data, currentUser, switchUser, changeRolePin, openAdminModal, isAdminVerified } = useAppContext();
   const [activeSubTab, setActiveSubTab] = useState<"general" | "notifications" | "security" | "backup">("general");
 
   const isAdmin = currentUser.role === "admin" && isAdminVerified;
@@ -23,6 +23,7 @@ export default function SettingsContent() {
   const [contentReminder, setContentReminder] = useState(true);
 
   // Security State
+  const [targetPinRole, setTargetPinRole] = useState<"admin" | "kreatif" | "guru">("admin");
   const [oldPin, setOldPin] = useState("");
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -40,13 +41,13 @@ export default function SettingsContent() {
       setPinError("Konfirmasi PIN baru tidak cocok!");
       return;
     }
-    const res = changeAdminPin(oldPin, newPin);
+    const res = changeRolePin(targetPinRole, oldPin, newPin);
     if (res.success) {
       setOldPin("");
       setNewPin("");
       setConfirmPin("");
       setPinError("");
-      triggerToast(res.message || "PIN Keamanan Admin berhasil diperbarui!");
+      triggerToast(res.message || "PIN Keamanan berhasil diperbarui!");
     } else {
       setPinError(res.message || "Gagal mengubah PIN.");
     }
@@ -333,16 +334,60 @@ export default function SettingsContent() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Box 1: Ubah PIN Akses Admin */}
-              <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 max-w-md space-y-4">
+              {/* Box 1: Ubah PIN Akses Role */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 max-w-lg space-y-4 shadow-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
                     <KeyRound size={16} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-extrabold text-emerald-950">PIN Keamanan Hak Admin</h4>
-                    <p className="text-[11px] text-emerald-700">Ganti PIN untuk memverifikasi wewenang Admin sistem</p>
+                    <h4 className="text-xs font-extrabold text-slate-900">Kelola PIN Keamanan Peran</h4>
+                    <p className="text-[11px] text-slate-500">Atur kode PIN rahasia untuk masing-masing bagian tim</p>
                   </div>
+                </div>
+
+                {/* Role Selector Tabs */}
+                <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => { setTargetPinRole("admin"); setPinError(""); }}
+                    className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                      targetPinRole === "admin"
+                        ? "bg-white text-emerald-700 shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    🛡️ Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTargetPinRole("kreatif"); setPinError(""); }}
+                    className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                      targetPinRole === "kreatif"
+                        ? "bg-white text-purple-700 shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    🎨 Tim Kreatif
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTargetPinRole("guru"); setPinError(""); }}
+                    className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                      targetPinRole === "guru"
+                        ? "bg-white text-blue-700 shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    📚 Guru
+                  </button>
+                </div>
+
+                <div className="p-3 bg-slate-50 border border-slate-200/70 rounded-xl text-[11px] text-slate-600 flex items-center justify-between">
+                  <span>Target: <strong>{targetPinRole === "admin" ? "Admin / Tim Inti (Nukman)" : targetPinRole === "kreatif" ? "Tim Kreatif & Desain (Faruq)" : "Guru / Pengajar (Hammam)"}</strong></span>
+                  <span className="font-mono text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                    Bawaan: {targetPinRole === "admin" ? "123456" : targetPinRole === "kreatif" ? "222222" : "333333"}
+                  </span>
                 </div>
 
                 <form onSubmit={handlePinSubmit} className="space-y-3">
@@ -351,10 +396,10 @@ export default function SettingsContent() {
                     <input 
                       type="password"
                       required
-                      placeholder="Masukkan PIN lama (default: 123456)"
+                      placeholder={`Masukkan PIN lama (${targetPinRole === 'admin' ? '123456' : targetPinRole === 'kreatif' ? '222222' : '333333'})`}
                       value={oldPin}
                       onChange={(e) => setOldPin(e.target.value)}
-                      className="w-full text-xs p-3 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
+                      className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
                     />
                   </div>
 
@@ -366,7 +411,7 @@ export default function SettingsContent() {
                       placeholder="Masukkan PIN baru"
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value)}
-                      className="w-full text-xs p-3 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
+                      className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
                     />
                   </div>
 
@@ -378,12 +423,12 @@ export default function SettingsContent() {
                       placeholder="Ulangi PIN baru"
                       value={confirmPin}
                       onChange={(e) => setConfirmPin(e.target.value)}
-                      className="w-full text-xs p-3 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
+                      className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
                     />
                   </div>
 
                   {pinError && (
-                    <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2 rounded-xl border border-rose-200">
+                    <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
                       {pinError}
                     </p>
                   )}
@@ -393,18 +438,18 @@ export default function SettingsContent() {
                     className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer"
                   >
                     <Check size={14} />
-                    <span>Simpan PIN Baru</span>
+                    <span>Simpan PIN {targetPinRole === "admin" ? "Admin" : targetPinRole === "kreatif" ? "Kreatif" : "Guru"}</span>
                   </button>
                 </form>
               </div>
 
               {/* Status Info */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 max-w-md">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 max-w-lg">
                 <p className="font-bold text-slate-800 flex items-center gap-1.5 mb-1">
-                  🛡️ Proteksi Keamanan Mode Asli Aktif
+                  🛡️ Proteksi Multi-Role Aktif
                 </p>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Semua anggota yang bukan Admin tidak dapat mengubah daftar tim, pengaturan sistem, atau backup tanpa verifikasi PIN ini.
+                  Setiap peran dikunci dengan PIN mandiri. Anggota atau guru tidak dapat berpindah role tanpa memasukkan PIN bagian tersebut, sehingga data aman dari kesalahan pencet atau perubahan yang tidak diinginkan.
                 </p>
               </div>
             </div>

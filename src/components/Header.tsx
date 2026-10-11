@@ -332,19 +332,14 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                 </p>
                 {PRESET_USERS.map((u) => {
                   const isCurrent = currentUser.role === u.role;
-                  const isRoleAdmin = u.role === "admin";
                   
                   return (
                     <button
                       key={u.role}
                       onClick={() => {
-                        if (isRoleAdmin && !isAdminVerified) {
-                          setShowRoleMenu(false);
-                          openAdminModal();
-                        } else {
-                          switchUser(u.role);
-                          setShowRoleMenu(false);
-                        }
+                        setShowRoleMenu(false);
+                        if (isCurrent) return;
+                        switchUser(u.role);
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-left transition-all cursor-pointer ${
                         isCurrent 
@@ -362,9 +357,9 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                             {u.role === "admin" ? (
                               <ShieldCheck size={12} className="text-emerald-600" />
                             ) : u.role === "kreatif" ? (
-                              <Layers size={12} className="text-slate-400" />
+                              <Layers size={12} className="text-purple-600" />
                             ) : (
-                              <BookOpen size={12} className="text-slate-400" />
+                              <BookOpen size={12} className="text-blue-600" />
                             )}
                           </p>
                           <p className="text-[10px] text-slate-500 truncate">{u.roleLabel}</p>
@@ -373,13 +368,16 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
 
                       <div className="shrink-0 pl-1">
                         {isCurrent ? (
-                          <Check size={16} className="text-emerald-600 stroke-[2.5]" />
-                        ) : isRoleAdmin ? (
-                          <span className="text-[9px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Check size={11} className="stroke-[3]" />
+                            Aktif
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-md flex items-center gap-1">
                             <Lock size={9} />
                             PIN
                           </span>
-                        ) : null}
+                        )}
                       </div>
                     </button>
                   );
