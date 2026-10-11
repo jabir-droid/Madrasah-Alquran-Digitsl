@@ -64,13 +64,22 @@ export const ROLE_STORAGE_KEYS: Record<UserRole, string> = {
   guru: "mqd_guru_pin"
 };
 
+export function getMemberRoleCategory(roleOrMember: any): UserRole {
+  const roleStr = typeof roleOrMember === "string" 
+    ? roleOrMember 
+    : (roleOrMember?.role || "");
+  const r = roleStr.toLowerCase();
+  if (r.includes("admin") || r.includes("inti") || r.includes("koordinator") || r.includes("pimpinan")) {
+    return "admin";
+  }
+  if (r.includes("kreatif") || r.includes("desain") || r.includes("media") || r.includes("editor")) {
+    return "kreatif";
+  }
+  return "guru";
+}
+
 export function memberToCurrentUser(m: any): CurrentUser {
-  const normRole = (m.role || "").toLowerCase();
-  const role: UserRole = (normRole.includes("admin") || normRole.includes("inti"))
-    ? "admin"
-    : normRole.includes("kreatif")
-    ? "kreatif"
-    : "guru";
+  const role: UserRole = getMemberRoleCategory(m);
 
   const roleLabel = role === "admin" 
     ? "Admin / Tim Inti" 
@@ -107,10 +116,8 @@ export function getMemberPin(m: any): string {
     if (localSaved) return localSaved;
   }
 
-  const normRole = (m.role || "").toLowerCase();
-  if (normRole.includes("admin") || normRole.includes("inti")) return "123456";
-  if (normRole.includes("kreatif")) return "222222";
-  return "333333";
+  const role = getMemberRoleCategory(m);
+  return DEFAULT_ROLE_PINS[role];
 }
 
 type AppState = typeof dbData;

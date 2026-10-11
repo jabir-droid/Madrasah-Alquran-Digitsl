@@ -4,9 +4,10 @@ import { useState } from "react";
 import { 
   Settings, Moon, Sun, Bell, Shield, Database, Download, 
   Upload, Check, RefreshCw, KeyRound, Monitor, Smartphone, 
-  HelpCircle, Sparkles, CheckCircle2, ShieldCheck, Users
+  HelpCircle, Sparkles, CheckCircle2, ShieldCheck, Users,
+  Eye, EyeOff, Lock, User
 } from "lucide-react";
-import { useAppContext, getMemberPin } from "@/context/AppContext";
+import { useAppContext, getMemberPin, getMemberRoleCategory } from "@/context/AppContext";
 import { getMemberAvatar } from "@/utils/avatar";
 
 export default function SettingsContent() {
@@ -25,16 +26,11 @@ export default function SettingsContent() {
 
   // Security State
   const [targetCategory, setTargetCategory] = useState<"admin" | "kreatif" | "guru">("guru");
-  const [selectedMemberId, setSelectedMemberId] = useState<string>(() => {
-    const guru = data.members.find(m => {
-      const r = (m.role || "").toLowerCase();
-      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
-    });
-    return guru ? guru.id : (data.members[0]?.id || "");
-  });
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [oldPin, setOldPin] = useState("");
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState("");
   const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
 
@@ -43,7 +39,33 @@ export default function SettingsContent() {
     setTimeout(() => setSaveSuccessMsg(""), 3500);
   };
 
-  const selectedMember = data.members.find(m => m.id === selectedMemberId) || data.members[0];
+  // Group members with 100% consistent role categorization
+  const adminMembers = data.members.filter(m => getMemberRoleCategory(m) === "admin");
+  const creativeMembers = data.members.filter(m => getMemberRoleCategory(m) === "kreatif");
+  const teacherMembers = data.members.filter(m => getMemberRoleCategory(m) === "guru");
+
+  const currentCategoryMembers = targetCategory === "admin" 
+    ? adminMembers 
+    : targetCategory === "kreatif" 
+    ? creativeMembers 
+    : teacherMembers;
+
+  // Selected member is always guaranteed to belong to active category
+  const selectedMember = currentCategoryMembers.find(m => m.id === selectedMemberId) 
+    || currentCategoryMembers[0] 
+    || data.members[0];
+
+  const handleCategorySelect = (cat: "admin" | "kreatif" | "guru") => {
+    setTargetCategory(cat);
+    const inCat = data.members.filter(m => getMemberRoleCategory(m) === cat);
+    if (inCat.length > 0) {
+      setSelectedMemberId(inCat[0].id);
+    }
+    setPinError("");
+    setOldPin("");
+    setNewPin("");
+    setConfirmPin("");
+  };
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,209 +375,251 @@ export default function SettingsContent() {
           ) : (
             <div className="space-y-6">
               {/* Box 1: Kelola PIN Keamanan Tiap Anggota / Guru */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-4 shadow-xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <KeyRound size={18} />
+              <div className="p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-5 shadow-xs">
+                {/* Header Title */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
+                    <KeyRound size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-extrabold text-slate-900">Kelola PIN Keamanan Anggota & Guru</h4>
-                    <p className="text-[11px] text-slate-500">Pilih individu tertentu untuk mengatur atau mengubah kode PIN rahasianya</p>
+                    <h4 className="text-sm sm:text-base font-extrabold text-slate-900 leading-tight">
+                      Kelola PIN Keamanan Anggota & Guru
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Pilih nama pengajar atau tim untuk mengatur kode PIN akses mandiri
+                    </p>
                   </div>
                 </div>
 
-                {/* Role Category Tabs */}
+                {/* 1. Role Category Segmented Tabs */}
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">
-                    Kategori Tim:
-                  </label>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      Bagian / Divisi Tim:
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
                     <button
                       type="button"
-                      onClick={() => { 
-                        setTargetCategory("admin"); 
-                        const first = data.members.find(m => (m.role || "").toLowerCase().includes("admin") || (m.role || "").toLowerCase().includes("inti"));
-                        if (first) setSelectedMemberId(first.id);
-                        setPinError(""); 
-                      }}
-                      className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                      onClick={() => handleCategorySelect("admin")}
+                      className={`py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         targetCategory === "admin"
-                          ? "bg-white text-emerald-800 shadow-2xs"
+                          ? "bg-white text-emerald-800 shadow-2xs font-extrabold"
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      🛡️ Admin
+                      <span>🛡️ Admin</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-200/70 text-slate-700">
+                        {adminMembers.length}
+                      </span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { 
-                        setTargetCategory("kreatif"); 
-                        const first = data.members.find(m => (m.role || "").toLowerCase().includes("kreatif"));
-                        if (first) setSelectedMemberId(first.id);
-                        setPinError(""); 
-                      }}
-                      className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                      onClick={() => handleCategorySelect("kreatif")}
+                      className={`py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         targetCategory === "kreatif"
-                          ? "bg-white text-purple-800 shadow-2xs"
+                          ? "bg-white text-purple-800 shadow-2xs font-extrabold"
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      🎨 Tim Kreatif ({data.members.filter(m => (m.role || "").toLowerCase().includes("kreatif")).length})
+                      <span>🎨 Tim Kreatif</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-200/70 text-slate-700">
+                        {creativeMembers.length}
+                      </span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { 
-                        setTargetCategory("guru"); 
-                        const first = data.members.find(m => !(m.role || "").toLowerCase().includes("admin") && !(m.role || "").toLowerCase().includes("kreatif"));
-                        if (first) setSelectedMemberId(first.id);
-                        setPinError(""); 
-                      }}
-                      className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                      onClick={() => handleCategorySelect("guru")}
+                      className={`py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         targetCategory === "guru"
-                          ? "bg-white text-blue-800 shadow-2xs"
+                          ? "bg-white text-blue-800 shadow-2xs font-extrabold"
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      📚 Guru ({data.members.filter(m => !(m.role || "").toLowerCase().includes("admin") && !(m.role || "").toLowerCase().includes("kreatif")).length})
+                      <span>📚 Guru</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-200/70 text-slate-700">
+                        {teacherMembers.length}
+                      </span>
                     </button>
                   </div>
                 </div>
 
-                {/* Specific Member Dropdown Selector */}
+                {/* 2. Interactive Member Selector Cards */}
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1.5 flex items-center justify-between">
-                    <span>Pilih Nama Anggota / Guru:</span>
-                    <span className="text-[10px] font-medium text-slate-400">
-                      Tersedia {data.members.filter(m => {
-                        const r = (m.role || "").toLowerCase();
-                        if (targetCategory === "admin") return r.includes("admin") || r.includes("inti");
-                        if (targetCategory === "kreatif") return r.includes("kreatif");
-                        return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
-                      }).length} orang
+                  <label className="text-xs font-bold text-slate-700 block mb-2 flex items-center justify-between">
+                    <span>
+                      Pilih Anggota ({currentCategoryMembers.length} orang tersedia):
+                    </span>
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/70">
+                      Target Aktif: {selectedMember?.name}
                     </span>
                   </label>
-                  <select
-                    value={selectedMemberId}
-                    onChange={(e) => {
-                      setSelectedMemberId(e.target.value);
-                      setPinError("");
-                      setOldPin("");
-                      setNewPin("");
-                      setConfirmPin("");
-                    }}
-                    className="w-full text-xs font-bold p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {data.members.filter(m => {
-                      const r = (m.role || "").toLowerCase();
-                      if (targetCategory === "admin") return r.includes("admin") || r.includes("inti");
-                      if (targetCategory === "kreatif") return r.includes("kreatif");
-                      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
-                    }).map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.name} — {m.role} {(m as any).pin ? "(🔒 PIN Kustom Aktif)" : "(🔑 PIN Bawaan)"}
-                      </option>
-                    ))}
-                  </select>
+
+                  <div className={`grid gap-2 ${currentCategoryMembers.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                    {currentCategoryMembers.map((m) => {
+                      const isSelected = m.id === selectedMember?.id;
+                      const hasCustom = Boolean((m as any).pin);
+                      const currentPinVal = getMemberPin(m);
+
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMemberId(m.id);
+                            setPinError("");
+                            setOldPin("");
+                            setNewPin("");
+                            setConfirmPin("");
+                          }}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                            isSelected
+                              ? "bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
+                              : "bg-slate-50/60 border-slate-200/80 hover:bg-slate-100/80 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-9 h-9 rounded-xl ${m.color || 'bg-emerald-600'} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs overflow-hidden`}>
+                              {getMemberAvatar(m.name) ? (
+                                <img src={getMemberAvatar(m.name)!} alt={m.name} className="w-full h-full object-cover" />
+                              ) : (
+                                m.name?.slice(0, 2).toUpperCase() || "US"
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-extrabold text-slate-900 leading-tight truncate flex items-center gap-1.5">
+                                {m.name}
+                                {isSelected && (
+                                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-emerald-600 text-white">
+                                    ✓ Dipilih
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-[10px] text-slate-400 truncate mt-0.5">{m.role}</p>
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 text-right">
+                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+                              hasCustom 
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300" 
+                                : "bg-white text-slate-600 border-slate-200"
+                            }`}>
+                              {hasCustom ? "PIN Kustom" : `Bawaan: ${currentPinVal}`}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Selected Member Profile Card */}
+                {/* 3. PIN Form for Selected Member */}
                 {selectedMember && (
-                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-2xl ${selectedMember.color || 'bg-emerald-600'} text-white text-xs font-extrabold flex items-center justify-center shrink-0 shadow-xs overflow-hidden`}>
-                        {getMemberAvatar(selectedMember.name) ? (
-                          <img src={getMemberAvatar(selectedMember.name)!} alt={selectedMember.name} className="w-full h-full object-cover" />
-                        ) : (
-                          selectedMember.name?.slice(0, 2).toUpperCase() || "US"
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-extrabold text-slate-900 truncate">
-                          Target: {selectedMember.name}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-200/70 pb-3">
+                      <div>
+                        <p className="text-xs font-extrabold text-slate-800">
+                          Form Sandi PIN: {selectedMember.name}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate">{selectedMember.role}</p>
+                        <p className="text-[11px] text-slate-400">
+                          Peran: <strong className="text-slate-600">{selectedMember.role}</strong>
+                        </p>
                       </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-xl border ${
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
                         (selectedMember as any).pin 
                           ? "bg-emerald-50 text-emerald-800 border-emerald-200" 
-                          : "bg-slate-100 text-slate-700 border-slate-200"
+                          : "bg-slate-100 text-slate-600 border-slate-200"
                       }`}>
-                        {(selectedMember as any).pin ? "PIN Kustom Aktif" : `Bawaan: ${getMemberPin(selectedMember)}`}
+                        {(selectedMember as any).pin ? "🔒 PIN Kustom Aktif" : `🔑 Bawaan: ${getMemberPin(selectedMember)}`}
                       </span>
                     </div>
+
+                    <form onSubmit={handlePinSubmit} className="space-y-3.5">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-bold text-slate-700">
+                            PIN Baru (Min. 4 digit)
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setShowPin(!showPin)}
+                            className="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                          >
+                            {showPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                            <span>{showPin ? "Sembunyikan" : "Tampilkan"}</span>
+                          </button>
+                        </div>
+                        <input 
+                          type={showPin ? "text" : "password"}
+                          required
+                          maxLength={12}
+                          placeholder="Masukkan PIN baru"
+                          value={newPin}
+                          onChange={(e) => setNewPin(e.target.value)}
+                          className="w-full text-xs font-mono font-bold p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          Konfirmasi PIN Baru
+                        </label>
+                        <input 
+                          type={showPin ? "text" : "password"}
+                          required
+                          maxLength={12}
+                          placeholder="Ulangi PIN baru"
+                          value={confirmPin}
+                          onChange={(e) => setConfirmPin(e.target.value)}
+                          className="w-full text-xs font-mono font-bold p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">
+                          PIN Lama <span className="text-[10px] text-slate-400 font-normal">(Kosongkan jika admin mereset langsung)</span>
+                        </label>
+                        <input 
+                          type={showPin ? "text" : "password"}
+                          placeholder={`PIN saat ini (${getMemberPin(selectedMember)})`}
+                          value={oldPin}
+                          onChange={(e) => setOldPin(e.target.value)}
+                          className="w-full text-xs font-mono p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+
+                      {pinError && (
+                        <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200 animate-in fade-in">
+                          {pinError}
+                        </p>
+                      )}
+
+                      <button 
+                        type="submit"
+                        className="flex items-center justify-center gap-2 text-xs font-bold w-full py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md transition-colors cursor-pointer"
+                      >
+                        <Check size={14} />
+                        <span>Simpan PIN untuk {selectedMember.name}</span>
+                      </button>
+                    </form>
                   </div>
                 )}
-
-                {/* PIN Form */}
-                <form onSubmit={handlePinSubmit} className="space-y-3.5 pt-1">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      PIN Lama (Kosongkan jika admin mereset langsung)
-                    </label>
-                    <input 
-                      type="password"
-                      placeholder={`Masukkan PIN lama (Opsional / ${selectedMember ? getMemberPin(selectedMember) : '333333'})`}
-                      value={oldPin}
-                      onChange={(e) => setOldPin(e.target.value)}
-                      className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">PIN Baru (Min 4 digit)</label>
-                    <input 
-                      type="password"
-                      required
-                      placeholder="Masukkan PIN baru khusus untuk orang ini"
-                      value={newPin}
-                      onChange={(e) => setNewPin(e.target.value)}
-                      className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Konfirmasi PIN Baru</label>
-                    <input 
-                      type="password"
-                      required
-                      placeholder="Ulangi PIN baru"
-                      value={confirmPin}
-                      onChange={(e) => setConfirmPin(e.target.value)}
-                      className="w-full text-xs p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono"
-                    />
-                  </div>
-
-                  {pinError && (
-                    <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200 animate-in fade-in">
-                      {pinError}
-                    </p>
-                  )}
-
-                  <button 
-                    type="submit"
-                    className="flex items-center justify-center gap-2 text-xs font-bold w-full py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md transition-colors cursor-pointer"
-                  >
-                    <Check size={14} />
-                    <span>Simpan PIN untuk {selectedMember?.name || "Anggota"}</span>
-                  </button>
-                </form>
               </div>
 
               {/* Box 2: Daftar Lengkap Status PIN Seluruh Anggota Madrasah */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-4 shadow-xs">
+              <div className="p-5 sm:p-7 rounded-3xl bg-white border border-slate-200/90 max-w-xl space-y-4 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Users size={15} />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <Users size={16} />
                     </div>
                     <div>
                       <h4 className="text-xs font-extrabold text-slate-900">
-                        Status PIN Seluruh Anggota ({data.members.length} Orang)
+                        Status PIN Seluruh Tim ({data.members.length} Orang)
                       </h4>
                       <p className="text-[11px] text-slate-400">
-                        Klik tombol "Atur PIN" untuk mengganti PIN individu yang diinginkan
+                        Klik tombol "Atur PIN" untuk langsung mengedit kode PIN anggota tersebut
                       </p>
                     </div>
                   </div>
@@ -563,9 +627,10 @@ export default function SettingsContent() {
 
                 <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto pr-1">
                   {data.members.map((m) => {
-                    const isTarget = m.id === selectedMemberId;
+                    const isTarget = m.id === selectedMember?.id;
                     const hasCustom = Boolean((m as any).pin);
                     const currentPinVal = getMemberPin(m);
+                    const cat = getMemberRoleCategory(m);
 
                     return (
                       <div 
@@ -602,11 +667,8 @@ export default function SettingsContent() {
                           <button
                             type="button"
                             onClick={() => {
+                              setTargetCategory(cat);
                               setSelectedMemberId(m.id);
-                              const r = (m.role || "").toLowerCase();
-                              if (r.includes("admin") || r.includes("inti")) setTargetCategory("admin");
-                              else if (r.includes("kreatif")) setTargetCategory("kreatif");
-                              else setTargetCategory("guru");
                               setPinError("");
                               setOldPin("");
                               setNewPin("");

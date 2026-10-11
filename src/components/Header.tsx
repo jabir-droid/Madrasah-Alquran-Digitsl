@@ -1,5 +1,5 @@
 import { Bell, HelpCircle, Menu, Settings, ChevronDown, Check, Shield, Sparkles, BookOpen, User, Clock, Calendar, ShieldCheck, Layers, Lock, Key } from "lucide-react";
-import { useAppContext, PRESET_USERS, UserRole } from "@/context/AppContext";
+import { useAppContext, PRESET_USERS, UserRole, getMemberRoleCategory } from "@/context/AppContext";
 import { useState, useRef, useEffect } from "react";
 import { getMemberAvatar } from "@/utils/avatar";
 
@@ -336,10 +336,7 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                     Admin / Tim Inti
                   </p>
                   <div className="space-y-1">
-                    {data.members.filter(m => {
-                      const r = (m.role || "").toLowerCase();
-                      return r.includes("admin") || r.includes("inti");
-                    }).map((m) => {
+                    {data.members.filter(m => getMemberRoleCategory(m) === "admin").map((m) => {
                       const isCurrent = currentUser.id === m.id || (currentUser.role === "admin" && currentUser.name === m.name);
                       const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "AD";
                       const avatar = getMemberAvatar(m.name);
@@ -397,10 +394,7 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                     Tim Kreatif & Desain
                   </p>
                   <div className="space-y-1">
-                    {data.members.filter(m => {
-                      const r = (m.role || "").toLowerCase();
-                      return r.includes("kreatif");
-                    }).map((m) => {
+                    {data.members.filter(m => getMemberRoleCategory(m) === "kreatif").map((m) => {
                       const isCurrent = currentUser.id === m.id || (currentUser.role === "kreatif" && currentUser.name === m.name);
                       const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "KR";
                       const avatar = getMemberAvatar(m.name);
@@ -455,16 +449,10 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                 <div className="pt-2">
                   <p className="text-[10px] font-bold text-slate-400 px-2 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <BookOpen size={11} className="text-blue-600" />
-                    Guru / Pengajar ({data.members.filter(m => {
-                      const r = (m.role || "").toLowerCase();
-                      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
-                    }).length})
+                    Guru / Pengajar ({data.members.filter(m => getMemberRoleCategory(m) === "guru").length})
                   </p>
                   <div className="space-y-1">
-                    {data.members.filter(m => {
-                      const r = (m.role || "").toLowerCase();
-                      return !r.includes("admin") && !r.includes("inti") && !r.includes("kreatif");
-                    }).map((m) => {
+                    {data.members.filter(m => getMemberRoleCategory(m) === "guru").map((m) => {
                       const isCurrent = currentUser.id === m.id || (currentUser.role === "guru" && currentUser.name === m.name);
                       const initials = m.name ? m.name.slice(0, 2).toUpperCase() : "GU";
                       const avatar = getMemberAvatar(m.name);
