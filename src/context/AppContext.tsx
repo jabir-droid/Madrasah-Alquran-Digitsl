@@ -262,6 +262,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok) throw new Error("Sync network error");
       const remoteData = await res.json();
       if (remoteData && Array.isArray(remoteData.cards) && Array.isArray(remoteData.members)) {
+        // Compare with local storage to avoid clobbering unsaved local edits
+        const saved = localStorage.getItem("madrasahAppDB");
+        if (saved) {
+          try {
+            const localData = JSON.parse(saved);
+            const localTime = Number(localData.updatedAt || 0);
+            const remoteTime = Number(remoteData.updatedAt || 0);
+
+            // If local data has newer modifications and has cards, sync local up to server
+            if (localTime > remoteTime && Array.isArray(localData.cards) && localData.cards.length > 0) {
+              fetch("/api/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(localData)
+              }).catch(() => {});
+              setData(localData);
+              setSyncStatus("synced");
+              return;
+            }
+          } catch (e) {}
+        }
+
         setData(remoteData);
         localStorage.setItem("madrasahAppDB", JSON.stringify(remoteData));
         setSyncStatus("synced");
@@ -288,8 +310,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // 2. Fetch fresh from server
     fetchRemote();
 
-    // 3. Polling every 3.5 seconds for realtime multi-user updates
-    const interval = setInterval(fetchRemote, 3500);
+    // 3. Polling every 5 seconds for realtime multi-user updates
+    const interval = setInterval(fetchRemote, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -299,15 +321,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const saveData = (newData: AppState) => {
-    setData(newData);
-    localStorage.setItem("madrasahAppDB", JSON.stringify(newData));
+    const updated = {
+      ...newData,
+      updatedAt: Date.now()
+    };
+    setData(updated);
+    try {
+      localStorage.setItem("madrasahAppDB", JSON.stringify(updated));
+    } catch (e) {}
     setSyncStatus("syncing");
 
     // Broadcast to other tabs immediately
     try {
       if (typeof window !== "undefined" && "BroadcastChannel" in window) {
         const bc = new BroadcastChannel("madrasah_workspace_channel");
-        bc.postMessage(newData);
+        bc.postMessage(updated);
         bc.close();
       }
     } catch (e) {}
@@ -316,7 +344,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetch("/api/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newData)
+      body: JSON.stringify(updated)
     })
       .then(res => {
         if (res.ok) {

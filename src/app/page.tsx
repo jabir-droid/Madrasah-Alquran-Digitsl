@@ -19,7 +19,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showGuide, setShowGuide] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
   const handleTabChange = (tab: string) => {
     if (tab === "guide") {
@@ -31,22 +30,16 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-800 selection:bg-brand-200">
-      {/* Sidebar (Auto-expands smoothly on hover & shifts main layout) */}
+      {/* Sidebar (Paten / tetap terbuka di desktop, drawer di mobile) */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={handleTabChange}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
-        isHovered={isSidebarHovered}
-        setIsHovered={setIsSidebarHovered}
       />
 
-      {/* Desktop dynamic spacer matching sidebar width (64px collapsed, 200px expanded) so main content shifts smoothly */}
-      <div 
-        className={`shrink-0 hidden lg:block transition-[width] duration-300 ease-in-out ${
-          isSidebarHovered ? "w-[200px]" : "w-[64px]"
-        }`} 
-      />
+      {/* Desktop fixed spacer (220px) matching sidebar width */}
+      <div className="shrink-0 hidden lg:block w-[220px]" />
       
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
         <Header 

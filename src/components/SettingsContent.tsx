@@ -215,20 +215,12 @@ export default function SettingsContent() {
             {/* Setting Item 2 */}
             <div className="flex items-center justify-between pt-4">
               <div>
-                <p className="text-xs font-bold text-slate-800">Mekanisme Auto-Expand Sidebar on Hover</p>
-                <p className="text-[11px] text-slate-400">Sidebar otomatis melebar ramping dan menggeser konten saat diarahkan kursor</p>
+                <p className="text-xs font-bold text-slate-800">Status Sidebar Navigasi</p>
+                <p className="text-[11px] text-slate-400">Sidebar selalu terbuka paten agar menu dan label mudah diakses langsung tanpa buka-tutup</p>
               </div>
-              <button
-                onClick={() => {
-                  setSidebarHoverActive(!sidebarHoverActive);
-                  triggerToast("Mekanisme sidebar diperbarui.");
-                }}
-                className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
-                  sidebarHoverActive ? "bg-emerald-600 justify-end" : "bg-slate-200 justify-start"
-                }`}
-              >
-                <div className="w-4 h-4 rounded-full bg-white shadow-xs"></div>
-              </button>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+                📌 Paten / Tetap Terbuka
+              </span>
             </div>
 
             {/* Setting Item 3 */}
