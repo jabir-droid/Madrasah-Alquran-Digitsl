@@ -19,24 +19,24 @@ export interface CurrentUser {
 export const PRESET_USERS: CurrentUser[] = [
   {
     id: "u_numan",
-    name: "Nukman",
-    fullName: "Nukman Al-Hafizh",
+    name: "Nu'man",
+    fullName: "Nu'man Al-Hafizh",
     role: "admin",
     roleLabel: "Admin / Tim Inti",
-    email: "nukman@madrasahquran.id",
+    email: "numan@madrasahquran.id",
     avatarBg: "bg-emerald-500",
-    initials: "NK",
+    initials: "NM",
     bio: "Koordinator utama ruang kerja digital, memiliki akses penuh ke seluruh manajemen tugas, konten, dan konfigurasi madrasah."
   },
   {
-    id: "u_faruq",
-    name: "Faruq",
-    fullName: "Faruq Ar-Rasyid",
+    id: "u_jabir",
+    name: "Jabir",
+    fullName: "Jabir Ahmad",
     role: "kreatif",
     roleLabel: "Tim Kreatif & Desain",
-    email: "faruq@madrasahquran.id",
+    email: "jabir@madrasahquran.id",
     avatarBg: "bg-purple-600",
-    initials: "FQ",
+    initials: "JB",
     bio: "Spesialis produksi media dakwah, penulisan naskah, kurasi konten sosial media, dan aset visual madrasah."
   },
   {
@@ -166,9 +166,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppState>(dbData);
-  // Default to creative team Faruq on fresh unauthenticated load, or restore verified admin
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(PRESET_USERS[1]);
-  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  // Default to Admin Nu'man
+  const [currentUser, setCurrentUser] = useState<CurrentUser>(PRESET_USERS[0]);
+  const [isAdminVerified, setIsAdminVerified] = useState(true);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [authModalTargetRole, setAuthModalTargetRole] = useState<UserRole | null>(null);
   const [authModalTargetMemberId, setAuthModalTargetMemberId] = useState<string | null>(null);
@@ -178,29 +178,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Restore User Role & Admin Auth State
     try {
-      const savedAuth = localStorage.getItem("mqd_admin_verified");
-      const isVerified = savedAuth === "true";
-      setIsAdminVerified(isVerified);
+      // 1. Purge any stale Faruq cache completely
+      const rawUser = localStorage.getItem("mqd_current_user");
+      if (rawUser && (rawUser.toLowerCase().includes("faruq") || rawUser.includes("u_faruq"))) {
+        localStorage.removeItem("mqd_current_user");
+      }
+      localStorage.removeItem("mqd_user_profile_u_faruq");
+      localStorage.removeItem("mqd_pin_u_faruq");
+
+      // 2. Client is Nu'man - Admin verified ALWAYS defaults to true
+      localStorage.setItem("mqd_admin_verified", "true");
+      setIsAdminVerified(true);
 
       const savedUser = localStorage.getItem("mqd_current_user");
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
-        if (parsed && parsed.id) {
-          // If saved user was admin but not verified in this session, fallback to faruq
-          if (parsed.role === "admin" && !isVerified) {
-            setCurrentUser(PRESET_USERS[1]);
-          } else {
-            // Check if saved user matches member in data.members
-            const memberMatch = data.members.find(m => m.id === parsed.id);
-            if (memberMatch) {
-              setCurrentUser(memberToCurrentUser(memberMatch));
-            } else {
-              const presetMatch = PRESET_USERS.find(u => u.role === parsed.role);
-              if (presetMatch) setCurrentUser(presetMatch);
+        if (parsed && parsed.id && parsed.id !== "u_faruq") {
+          const memberMatch = data.members.find(m => m.id === parsed.id);
+          if (memberMatch) {
+            const u = memberToCurrentUser(memberMatch);
+            setCurrentUser(u);
+            if (u.role === "admin") {
+              setIsAdminVerified(true);
             }
+            return;
           }
         }
       }
+
+      // Default fallback ALWAYS to Nu'man (Admin Utama)
+      const numanMember = data.members.find(m => m.id === "u_numan") || PRESET_USERS[0];
+      const u = memberToCurrentUser(numanMember);
+      setCurrentUser(u);
+      setIsAdminVerified(true);
+      localStorage.setItem("mqd_current_user", JSON.stringify(u));
     } catch (e) {
       console.error(e);
     }
@@ -399,21 +410,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const lockAdmin = () => {
     setIsAdminVerified(false);
     try {
-      localStorage.removeItem("mqd_admin_verified");
+      localStorage.setItem("mqd_admin_verified", "false");
     } catch (e) {
       console.error(e);
     }
-    // Switch to Faruq (Tim Kreatif)
-    const fallbackUser = PRESET_USERS[1];
-    setCurrentUser(fallbackUser);
-    try {
-      localStorage.setItem("mqd_current_user", JSON.stringify(fallbackUser));
-    } catch (e) {
-      console.error(e);
+    const nonAdmin = data.members.find(m => m.id !== "u_numan");
+    if (nonAdmin) {
+      const fallbackUser = memberToCurrentUser(nonAdmin);
+      setCurrentUser(fallbackUser);
+      try {
+        localStorage.setItem("mqd_current_user", JSON.stringify(fallbackUser));
+      } catch (e) {}
     }
   };
 
   const switchUser = (roleOrMemberId: string) => {
+    // If switching to admin or Nu'man, switch immediately without PIN block
+    if (roleOrMemberId === "admin" || roleOrMemberId === "u_numan") {
+      const numanMember = data.members.find(m => m.id === "u_numan");
+      const uAdmin = numanMember ? memberToCurrentUser(numanMember) : PRESET_USERS[0];
+      setCurrentUser(uAdmin);
+      setIsAdminVerified(true);
+      try {
+        localStorage.setItem("mqd_current_user", JSON.stringify(uAdmin));
+        localStorage.setItem("mqd_admin_verified", "true");
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("mqd_profile_updated"));
+        }
+      } catch (e) {}
+      return;
+    }
+
     // Check if it's a memberId
     const member = data.members.find(m => m.id === roleOrMemberId);
     if (member) {
@@ -477,17 +504,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const sanitizeData = (raw: any): AppState => {
+    if (!raw) return raw;
+    let clean = { ...raw };
+    if (Array.isArray(clean.members)) {
+      clean.members = clean.members.filter((m: any) => m.id !== "u_faruq" && !m.name?.toLowerCase().includes("faruq"));
+    }
+    if (Array.isArray(clean.cards)) {
+      clean.cards = clean.cards.map((c: any) => c.assigneeId === "u_faruq" ? { ...c, assigneeId: "u_numan" } : c);
+    }
+    return clean;
+  };
+
   const fetchRemote = async () => {
     try {
       const res = await fetch("/api/sync", { cache: "no-store" });
       if (!res.ok) throw new Error("Sync network error");
-      const remoteData = await res.json();
+      let remoteData = await res.json();
       if (remoteData && Array.isArray(remoteData.cards) && Array.isArray(remoteData.members)) {
+        remoteData = sanitizeData(remoteData);
+
         // Compare with local storage to avoid clobbering unsaved local edits
         const saved = localStorage.getItem("madrasahAppDB");
         if (saved) {
           try {
-            const localData = JSON.parse(saved);
+            let localData = sanitizeData(JSON.parse(saved));
             const localTime = Number(localData.updatedAt || 0);
             const remoteTime = Number(remoteData.updatedAt || 0);
 
@@ -499,6 +540,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify(localData)
               }).catch(() => {});
               setData(localData);
+              localStorage.setItem("madrasahAppDB", JSON.stringify(localData));
               setSyncStatus("synced");
               return;
             }
@@ -521,9 +563,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("madrasahAppDB");
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
+        let parsed = sanitizeData(JSON.parse(saved));
         if (parsed && Array.isArray(parsed.cards)) {
           setData(parsed);
+          localStorage.setItem("madrasahAppDB", JSON.stringify(parsed));
         }
       } catch (e) {}
     }
@@ -731,6 +774,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       newMembers.push({ ...member, id: "u_" + Date.now() });
     }
     saveData({ ...data, members: newMembers });
+    if (member.id === currentUser.id) {
+      const updated = memberToCurrentUser(member);
+      setCurrentUser(updated);
+      try {
+        localStorage.setItem("mqd_current_user", JSON.stringify(updated));
+      } catch (e) {}
+    }
   };
 
   return (

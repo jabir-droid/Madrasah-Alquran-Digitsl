@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Settings, Moon, Sun, Bell, Shield, Database, Download, 
   Upload, Check, RefreshCw, KeyRound, Monitor, Smartphone, 
@@ -16,13 +16,72 @@ export default function SettingsContent() {
 
   const isAdmin = currentUser.role === "admin" && isAdminVerified;
 
-  // Settings State
+  // Settings State with LocalStorage Persistence
   const [hijriDateActive, setHijriDateActive] = useState(true);
   const [sidebarHoverActive, setSidebarHoverActive] = useState(true);
   const [soundNotify, setSoundNotify] = useState(true);
   const [emailDigest, setEmailDigest] = useState(true);
   const [taskReminder, setTaskReminder] = useState(true);
   const [contentReminder, setContentReminder] = useState(true);
+
+  // Load saved settings from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedHijri = localStorage.getItem("mqd_setting_hijri");
+      if (savedHijri !== null) setHijriDateActive(savedHijri === "true");
+
+      const savedSound = localStorage.getItem("mqd_setting_sound_notify");
+      if (savedSound !== null) setSoundNotify(savedSound === "true");
+
+      const savedTask = localStorage.getItem("mqd_setting_task_reminder");
+      if (savedTask !== null) setTaskReminder(savedTask === "true");
+
+      const savedContent = localStorage.getItem("mqd_setting_content_reminder");
+      if (savedContent !== null) setContentReminder(savedContent === "true");
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleToggleHijri = () => {
+    const newVal = !hijriDateActive;
+    setHijriDateActive(newVal);
+    try {
+      localStorage.setItem("mqd_setting_hijri", String(newVal));
+      window.dispatchEvent(new Event("mqd_settings_updated"));
+    } catch {}
+    triggerToast(newVal ? "Penanggalan Hijriah diaktifkan di header & kalender." : "Penanggalan Hijriah dinonaktifkan.");
+  };
+
+  const handleToggleContentReminder = () => {
+    const newVal = !contentReminder;
+    setContentReminder(newVal);
+    try {
+      localStorage.setItem("mqd_setting_content_reminder", String(newVal));
+      window.dispatchEvent(new Event("mqd_settings_updated"));
+    } catch {}
+    triggerToast(newVal ? "Pengingat rilis konten dakwah diaktifkan." : "Pengingat rilis konten dinonaktifkan.");
+  };
+
+  const handleToggleTaskReminder = () => {
+    const newVal = !taskReminder;
+    setTaskReminder(newVal);
+    try {
+      localStorage.setItem("mqd_setting_task_reminder", String(newVal));
+      window.dispatchEvent(new Event("mqd_settings_updated"));
+    } catch {}
+    triggerToast(newVal ? "Pemberitahuan tugas baru diaktifkan." : "Pemberitahuan tugas baru dinonaktifkan.");
+  };
+
+  const handleToggleSound = () => {
+    const newVal = !soundNotify;
+    setSoundNotify(newVal);
+    try {
+      localStorage.setItem("mqd_setting_sound_notify", String(newVal));
+      window.dispatchEvent(new Event("mqd_settings_updated"));
+    } catch {}
+    triggerToast(newVal ? "Suara nada notifikasi diaktifkan." : "Mode hening (suara notifikasi dimatikan).");
+  };
 
   // Security State
   const [targetCategory, setTargetCategory] = useState<"admin" | "kreatif" | "guru">("guru");
@@ -241,10 +300,8 @@ export default function SettingsContent() {
                 <p className="text-[11px] text-slate-400">Menampilkan tanggal Hijriah di samping tanggal Masehi pada dashboard</p>
               </div>
               <button
-                onClick={() => {
-                  setHijriDateActive(!hijriDateActive);
-                  triggerToast("Penanggalan Hijriah berhasil diperbarui.");
-                }}
+                type="button"
+                onClick={handleToggleHijri}
                 className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
                   hijriDateActive ? "bg-emerald-600 justify-end" : "bg-slate-200 justify-start"
                 }`}
@@ -295,10 +352,8 @@ export default function SettingsContent() {
                 <p className="text-[11px] text-slate-400">Kirim pemberitahuan H-1 jam sebelum jadwal konten tayang di media sosial</p>
               </div>
               <button
-                onClick={() => {
-                  setContentReminder(!contentReminder);
-                  triggerToast("Pengaturan pengingat konten diperbarui.");
-                }}
+                type="button"
+                onClick={handleToggleContentReminder}
                 className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
                   contentReminder ? "bg-emerald-600 justify-end" : "bg-slate-200 justify-start"
                 }`}
@@ -313,10 +368,8 @@ export default function SettingsContent() {
                 <p className="text-[11px] text-slate-400">Dapatkan notifikasi saat anggota tim menugaskan kartu kanban kepada Anda</p>
               </div>
               <button
-                onClick={() => {
-                  setTaskReminder(!taskReminder);
-                  triggerToast("Pengaturan tugas baru diperbarui.");
-                }}
+                type="button"
+                onClick={handleToggleTaskReminder}
                 className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
                   taskReminder ? "bg-emerald-600 justify-end" : "bg-slate-200 justify-start"
                 }`}
@@ -331,10 +384,8 @@ export default function SettingsContent() {
                 <p className="text-[11px] text-slate-400">Bunyikan nada lembut saat ada aktivitas atau pesan penting baru</p>
               </div>
               <button
-                onClick={() => {
-                  setSoundNotify(!soundNotify);
-                  triggerToast("Suara notifikasi diperbarui.");
-                }}
+                type="button"
+                onClick={handleToggleSound}
                 className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
                   soundNotify ? "bg-emerald-600 justify-end" : "bg-slate-200 justify-start"
                 }`}

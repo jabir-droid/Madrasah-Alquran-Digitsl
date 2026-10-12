@@ -110,7 +110,7 @@ export const getHijriArabicTitle = (year: number, month: number): string => {
     "Jumadil Ula": "جمادى الأولى",
     "Jumadits Tsani": "جمادى الآخرة",
     "Rajab": "رجب",
-    "Sya'ban": "شعبan",
+    "Sya'ban": "شعبان",
     "Ramadhan": "رمضان",
     "Syawwal": "شوّال",
     "Dzulqa'dah": "ذو القعدة",

@@ -56,12 +56,20 @@ const DEFAULT_HADITH_QUOTES = [
 
 export default function DashboardContent({ setActiveTab, onOpenGuide }: DashboardContentProps) {
   const { data, currentUser } = useAppContext();
-  const [calMonth, setCalMonth] = useState(9); // 0-indexed, 9 = Oktober
-  const [calYear, setCalYear] = useState(2026);
-  const [selectedDay, setSelectedDay] = useState(8);
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [activityTab, setActivityTab] = useState<'today'|'all'>('today');
   const [showAllMembers, setShowAllMembers] = useState(false);
+
+  // Sync real-time date on mount
+  useEffect(() => {
+    const now = new Date();
+    setCalMonth(now.getMonth());
+    setCalYear(now.getFullYear());
+    setSelectedDay(now.getDate());
+  }, []);
   
   // Hadits & Weekly Target State with Local Storage persistence
   const [hadithList, setHadithList] = useState(DEFAULT_HADITH_QUOTES);
@@ -94,6 +102,28 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
 
   // Real-time synchronization when profile avatar is updated
   const [avatarTick, setAvatarTick] = useState(0);
+
+  // Setting Hijri Date Visibility
+  const [showHijri, setShowHijri] = useState(true);
+
+  useEffect(() => {
+    const checkSettings = () => {
+      try {
+        const saved = localStorage.getItem("mqd_setting_hijri");
+        if (saved !== null) {
+          setShowHijri(saved === "true");
+        }
+      } catch {}
+    };
+
+    checkSettings();
+    window.addEventListener("mqd_settings_updated", checkSettings);
+    window.addEventListener("storage", checkSettings);
+    return () => {
+      window.removeEventListener("mqd_settings_updated", checkSettings);
+      window.removeEventListener("storage", checkSettings);
+    };
+  }, []);
 
   useEffect(() => {
     const handleAvatarUpdate = () => {
@@ -385,9 +415,10 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
   };
 
   const handleJumpToday = () => {
-    setCalMonth(9);
-    setCalYear(2026);
-    setSelectedDay(8);
+    const now = new Date();
+    setCalMonth(now.getMonth());
+    setCalYear(now.getFullYear());
+    setSelectedDay(now.getDate());
   };
 
   const selectedDateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
@@ -398,7 +429,7 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
   const tasksOnSelectedDate = cards.filter(c => {
     if (c.deleted) return false;
     if (c.dueDate === selectedDateStr) return true;
-    if (!c.dueDate && c.month === `${calYear}-${String(calMonth + 1).padStart(2, "0")}` && selectedDay === 8) {
+    if (!c.dueDate && c.month === `${calYear}-${String(calMonth + 1).padStart(2, "0")}` && (selectedDay === 12 || selectedDay === 8)) {
       return true;
     }
     return false;
@@ -410,7 +441,7 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
     return cards.filter(c => {
       if (c.deleted) return false;
       if (c.dueDate === dateStr) return true;
-      if (!c.dueDate && c.month === `${calYear}-${String(calMonth + 1).padStart(2, "0")}` && day === 8) return true;
+      if (!c.dueDate && c.month === `${calYear}-${String(calMonth + 1).padStart(2, "0")}` && (day === 12 || day === 8)) return true;
       return false;
     });
   };
@@ -969,9 +1000,11 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                     {MONTH_NAMES[calMonth]} {calYear}
                   </h4>
                   {/* Bawahnya Tulisan Arab Bulan Hijriyah */}
-                  <p className="text-[11px] sm:text-xs font-serif font-bold text-emerald-800 leading-tight tracking-wide truncate mt-0.5">
-                    {getHijriArabicTitle(calYear, calMonth)}
-                  </p>
+                  {showHijri && (
+                    <p className="text-[11px] sm:text-xs font-serif font-bold text-emerald-800 leading-tight tracking-wide truncate mt-0.5">
+                      {getHijriArabicTitle(calYear, calMonth)}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1016,8 +1049,9 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             {/* Dates Grid: Ukuran Compact, Angka Arab Jelas & Tanpa Bertabrakan */}
             <div className="relative z-10 grid grid-cols-7 gap-1 text-center">
               {calendarDays.map((item, idx) => {
+                const now = new Date();
                 const isSelected = item.current && item.day === selectedDay;
-                const isToday = item.current && item.day === 8 && calMonth === 9 && calYear === 2026;
+                const isToday = item.current && item.day === now.getDate() && item.month === now.getMonth() && item.year === now.getFullYear();
                 const dayTasks = getTasksForDay(item.day, item.current);
                 const hasTask = dayTasks.length > 0;
                 const hijriDayNumber = getHijriDayNumber(item.year, item.month, item.day);
@@ -1044,23 +1078,25 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                     }`}
                   >
                     {/* Baris Atas: Angka Hijriyah Arab Jelas & Tidak Tabrakan */}
-                    <div className="w-full flex justify-end items-start pr-0.5 leading-none">
-                      <span className={`text-[10px] sm:text-[11px] font-bold font-serif leading-none ${
-                        isSelected 
-                          ? "text-emerald-100" 
-                          : isToday
-                          ? "text-amber-950 font-black"
-                          : isSunday
-                          ? (item.current ? "text-rose-600" : "text-rose-400/80")
-                          : isFriday
-                          ? (item.current ? "text-emerald-700" : "text-emerald-500/80")
-                          : item.current 
-                          ? "text-slate-700 font-bold" 
-                          : "text-slate-400"
-                      }`}>
-                        {toArabicDigits(hijriDayNumber)}
-                      </span>
-                    </div>
+                    {showHijri && (
+                      <div className="w-full flex justify-end items-start pr-0.5 leading-none">
+                        <span className={`text-[10px] sm:text-[11px] font-bold font-serif leading-none ${
+                          isSelected 
+                            ? "text-emerald-100" 
+                            : isToday
+                            ? "text-amber-950 font-black"
+                            : isSunday
+                            ? (item.current ? "text-rose-600" : "text-rose-400/80")
+                            : isFriday
+                            ? (item.current ? "text-emerald-700" : "text-emerald-500/80")
+                            : item.current 
+                            ? "text-slate-700 font-bold" 
+                            : "text-slate-400"
+                        }`}>
+                          {toArabicDigits(hijriDayNumber)}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Baris Tengah/Bawah: Tanggal Masehi Latin Rata Tengah */}
                     <div className="w-full flex justify-center items-center my-auto leading-none">
@@ -1091,8 +1127,12 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                 <div className="flex items-center gap-1.5 font-bold text-slate-800 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                   <span className="font-extrabold text-slate-900 truncate">{selectedDayName}, {selectedDay} {MONTH_NAMES[calMonth]}</span>
-                  <span className="text-slate-300 font-normal">•</span>
-                  <span className="text-emerald-700 font-semibold truncate text-[11px]">{selectedHijriFull}</span>
+                  {showHijri && (
+                    <>
+                      <span className="text-slate-300 font-normal">•</span>
+                      <span className="text-emerald-700 font-semibold truncate text-[11px]">{selectedHijriFull}</span>
+                    </>
+                  )}
                 </div>
                 <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
                   {tasksOnSelectedDate.length} Agenda

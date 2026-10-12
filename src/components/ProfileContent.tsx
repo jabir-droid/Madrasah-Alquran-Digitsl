@@ -18,7 +18,8 @@ export default function ProfileContent() {
     switchUser, 
     isAdminVerified, 
     openAdminModal, 
-    lockAdmin 
+    lockAdmin,
+    saveMember 
   } = useAppContext();
   
   // Profile state with LocalStorage persistence per user
@@ -152,6 +153,22 @@ export default function ProfileContent() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // 1. Sync updated member into global data.members & database
+      const existingMember = data.members.find(m => m.id === currentUser.id);
+      if (existingMember) {
+        saveMember({
+          ...existingMember,
+          name: profile.name,
+          role: profile.role
+        });
+      }
+
+      // 2. Save avatar to shared avatar utility
+      if (profile.avatarUrl) {
+        saveMemberAvatar(currentUser.id, profile.name, profile.avatarUrl);
+      }
+
+      // 3. Persist local profile state
       localStorage.setItem("mqd_user_profile_" + currentUser.id, JSON.stringify(profile));
       if (currentUser.role === "admin") {
         localStorage.setItem("mqd_institution_info", JSON.stringify(institutionInfo));
@@ -478,20 +495,10 @@ export default function ProfileContent() {
 
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
             {currentUser.role === 'admin' && isAdminVerified ? (
-              <>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/90">
-                  <ShieldCheck size={14} strokeWidth={2} className="text-emerald-600" />
-                  <span>Admin Terverifikasi</span>
-                </div>
-                <button
-                  onClick={() => lockAdmin()}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-rose-700 bg-slate-100 hover:bg-rose-50 px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-rose-200 transition-all cursor-pointer active:scale-95 shadow-2xs"
-                  title="Kunci kembali hak akses Admin"
-                >
-                  <Lock size={12} strokeWidth={2} />
-                  <span>Kunci Akses</span>
-                </button>
-              </>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/90 shadow-2xs">
+                <ShieldCheck size={14} strokeWidth={2} className="text-emerald-600" />
+                <span>Admin Terverifikasi (Akses Penuh)</span>
+              </div>
             ) : (
               <>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 bg-slate-100 border border-slate-200/80">
@@ -500,10 +507,10 @@ export default function ProfileContent() {
                 <button
                   onClick={() => openAdminModal()}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 shadow-xs"
-                  title="Masukkan PIN untuk membuka hak Admin"
+                  title="Beralih atau verifikasi hak Admin"
                 >
                   <Key size={12} strokeWidth={2} />
-                  <span>Verifikasi PIN Admin</span>
+                  <span>Verifikasi Admin</span>
                 </button>
               </>
             )}
@@ -556,11 +563,8 @@ export default function ProfileContent() {
               <button
                 key={u.role}
                 onClick={() => {
-                  if (isRoleAdmin && !isAdminVerified) {
-                    openAdminModal();
-                  } else {
-                    switchUser(u.role);
-                  }
+                  if (isSelected) return;
+                  switchUser(u.role);
                 }}
                 className={`text-left p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between group ${
                   isSelected
@@ -578,12 +582,7 @@ export default function ProfileContent() {
                     {isSelected ? (
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-900 text-white shadow-xs">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        {isRoleAdmin && isAdminVerified ? "Terverifikasi" : "Sedang Aktif"}
-                      </span>
-                    ) : isRoleAdmin ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-                        <Lock size={10} strokeWidth={2} />
-                        <span>Butuh PIN</span>
+                        {isRoleAdmin ? "Aktif & Terverifikasi" : "Sedang Aktif"}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 group-hover:text-slate-900 px-2 py-1 transition-colors">

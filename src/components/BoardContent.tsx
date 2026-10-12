@@ -28,9 +28,9 @@ export default function BoardContent() {
   const [avatarTick, setAvatarTick] = useState(0);
 
   // Calendar View Specific Month & Year State
-  const [calMonth, setCalMonth] = useState(9); // 0-indexed, 9 = Oktober
-  const [calYear, setCalYear] = useState(2026);
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<number | null>(8);
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<number | null>(() => new Date().getDate());
 
   const handlePrevMonth = () => {
     if (calMonth === 0) {
@@ -51,10 +51,18 @@ export default function BoardContent() {
   };
 
   const handleResetToCurrentMonth = () => {
-    setCalMonth(9);
-    setCalYear(2026);
-    setSelectedCalendarDate(8);
+    const now = new Date();
+    setCalMonth(now.getMonth());
+    setCalYear(now.getFullYear());
+    setSelectedCalendarDate(now.getDate());
   };
+
+  useEffect(() => {
+    const now = new Date();
+    setCalMonth(now.getMonth());
+    setCalYear(now.getFullYear());
+    setSelectedCalendarDate(now.getDate());
+  }, []);
 
   useEffect(() => {
     const handleAvatarUpdate = () => setAvatarTick(prev => prev + 1);
@@ -71,7 +79,7 @@ export default function BoardContent() {
   const getAssignee = (id?: string) => {
     if (!id) {
       const avatarUrl = getMemberAvatar("Nu'man") || getMemberAvatar("u_numan");
-      return { name: "Nukman", initial: "N", color: "bg-emerald-500", avatarUrl };
+      return { name: "Nu'man", initial: "N", color: "bg-emerald-500", avatarUrl };
     }
     const member = members.find(m => m.id === id || m.name.toLowerCase() === id.toLowerCase());
     if (!member) {
@@ -157,29 +165,29 @@ export default function BoardContent() {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
+    <div className="h-full flex flex-col p-4 sm:p-5 lg:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-x-hidden">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center bg-slate-100 p-1 rounded-lg">
             <button 
               onClick={() => setView("board")}
-              className={`px-4 py-1.5 font-bold text-sm rounded flex items-center gap-2 transition-colors ${view === 'board' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+              className={`px-3 sm:px-4 py-1.5 font-bold text-xs sm:text-sm rounded flex items-center gap-2 transition-colors cursor-pointer ${view === 'board' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
               <KanbanIcon size={16} /> Board
             </button>
             <button 
               onClick={() => setView("daftar")}
-              className={`px-4 py-1.5 font-bold text-sm rounded flex items-center gap-2 transition-colors ${view === 'daftar' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+              className={`px-3 sm:px-4 py-1.5 font-bold text-xs sm:text-sm rounded flex items-center gap-2 transition-colors cursor-pointer ${view === 'daftar' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
                Daftar
             </button>
             <button 
               onClick={() => setView("kalender")}
-              className={`px-4 py-1.5 font-bold text-sm rounded flex items-center gap-2 transition-colors ${view === 'kalender' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+              className={`px-3 sm:px-4 py-1.5 font-bold text-xs sm:text-sm rounded flex items-center gap-2 transition-colors cursor-pointer ${view === 'kalender' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
               <Calendar size={16} /> Kalender
             </button>
           </div>
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 relative z-20 ml-2">
+          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 relative z-20">
              <button onClick={handlePrevMonth} title="Bulan Sebelumnya" className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded cursor-pointer active:scale-95"><ChevronLeft size={16}/></button>
-             <button onClick={() => setShowMonthSelect(!showMonthSelect)} className="px-3 py-1 text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 rounded cursor-pointer"><Calendar size={14} className="text-emerald-700"/> {MONTH_NAMES[calMonth].slice(0, 3)} {calYear} <ChevronDown size={14}/></button>
+             <button onClick={() => setShowMonthSelect(!showMonthSelect)} className="px-2.5 sm:px-3 py-1 text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5 hover:bg-slate-50 rounded cursor-pointer"><Calendar size={14} className="text-emerald-700"/> {MONTH_NAMES[calMonth].slice(0, 3)} {calYear} <ChevronDown size={14}/></button>
              <button onClick={handleNextMonth} title="Bulan Berikutnya" className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded cursor-pointer active:scale-95"><ChevronRight size={16}/></button>
              
              {showMonthSelect && (
@@ -204,20 +212,20 @@ export default function BoardContent() {
                          </button>
                       ))}
                    </div>
-                   <button onClick={() => { handleResetToCurrentMonth(); setShowMonthSelect(false); }} className="w-full py-2 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-colors cursor-pointer">Bulan Berjalan (Okt 2026)</button>
+                   <button onClick={() => { handleResetToCurrentMonth(); setShowMonthSelect(false); }} className="w-full py-2 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-colors cursor-pointer">Bulan Berjalan ({MONTH_NAMES[new Date().getMonth()].slice(0, 3)} {new Date().getFullYear()})</button>
                 </div>
              )}
           </div>
-          <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-slate-50 transition-colors"><Archive size={16}/> Arsip</button>
+          <button className="flex items-center gap-1.5 bg-white border border-slate-200 text-slate-600 text-xs sm:text-sm font-semibold rounded-lg px-3 py-1.5 sm:py-2 hover:bg-slate-50 transition-colors cursor-pointer"><Archive size={15}/> Arsip</button>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <select 
             value={memberFilter}
             onChange={(e) => setMemberFilter(e.target.value)}
-            className="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-2 outline-none focus:border-brand-500">
+            className="bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-brand-500 shadow-2xs">
             <option value="">Semua Anggota Tim</option>
-            <option value="me">Tugasku Saja (Admin)</option>
+            <option value="me">Tugasku Saja</option>
             {members.map(m => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
@@ -225,7 +233,7 @@ export default function BoardContent() {
           <select 
             value={dueDateFilter}
             onChange={(e) => setDueDateFilter(e.target.value)}
-            className="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-2 outline-none focus:border-brand-500">
+            className="bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-brand-500 shadow-2xs">
             <option value="">Semua Tenggat</option>
             <option value="today">Hari Ini</option>
             <option value="tomorrow">Besok</option>
@@ -234,7 +242,7 @@ export default function BoardContent() {
           <select 
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-2 outline-none focus:border-brand-500">
+            className="bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-brand-500 shadow-2xs">
             <option value="">Semua Prioritas</option>
             <option value="high">Prioritas Tinggi</option>
             <option value="normal">Prioritas Normal</option>
@@ -245,9 +253,9 @@ export default function BoardContent() {
 
       {view === "board" && (
         <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex-1 flex gap-6 overflow-x-auto pb-4">
+        <div className="flex-1 flex gap-4 sm:gap-5 overflow-x-auto pb-4 custom-scrollbar">
           {columns.map((col) => (
-            <div key={col.id} className="w-80 shrink-0 flex flex-col">
+            <div key={col.id} className="flex-1 min-w-[260px] max-w-sm flex flex-col">
               <div className={`px-4 py-3 rounded-t-xl border-t border-x border-slate-200 bg-white flex justify-between items-center ${col.border} border-t-4`}>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-slate-800">{col.title}</h4>
@@ -264,7 +272,9 @@ export default function BoardContent() {
                     {col.cards.map((card, idx) => {
                       const assignee = getAssignee(card.assigneeId);
                       const checks = card.checklist || [];
-                      const isOverdue = card.dueDate && new Date(card.dueDate) < new Date("2026-10-01") && !col.isDone;
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const isOverdue = card.dueDate && new Date(card.dueDate) < today && !col.isDone;
 
                       return (
                         <Draggable key={card.id} draggableId={card.id} index={idx}>
@@ -357,7 +367,7 @@ export default function BoardContent() {
                                       assignee.initial || "N"
                                     )}
                                   </span>
-                                  <span>{assignee.name || "Nukman"}</span>
+                                  <span>{assignee.name || "Nu'man"}</span>
                                   <Flame size={12} className="text-purple-500 shrink-0" />
                                 </span>
                               </div>
@@ -549,7 +559,8 @@ export default function BoardContent() {
             {/* Calendar Days Grid */}
             <div className="relative z-10 flex-1 grid grid-cols-7 gap-2 auto-rows-fr min-h-[500px]">
               {calendarCells.map((item, idx) => {
-                const isToday = item.current && item.day === 8 && item.month === 9 && item.year === 2026;
+                const now = new Date();
+                const isToday = item.current && item.day === now.getDate() && item.month === now.getMonth() && item.year === now.getFullYear();
                 const isSelected = selectedCalendarDate === item.day && item.current;
                 const hijriDayNumber = getHijriDayNumber(item.year, item.month, item.day);
                 const cellDate = new Date(item.year, item.month, item.day);

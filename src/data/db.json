@@ -52,11 +52,6 @@
       "role": "Pengajar"
     },
     {
-      "id": "u_faruq",
-      "name": "Faruq",
-      "role": "Tim Kreatif"
-    },
-    {
       "id": "u_jabir",
       "name": "Jabir",
       "role": "Tim Kreatif"
@@ -91,7 +86,7 @@
       "title": "Sertifikat Aisar",
       "description": "Buatkan sertifikat kelulusan untuk halaqah yang sudah selesai",
       "assigneeId": "u_numan",
-      "dueDate": "",
+      "dueDate": "2026-10-12",
       "priority": "high",
       "order": 0,
       "createdAt": 1791380000000,
@@ -381,7 +376,7 @@
       "description": "Beberapa poin berikut belum sempat dibahas secara mendalam dan perlu masuk agenda rapat berikutnya",
       "columnId": "c_1",
       "priority": "normal",
-      "assigneeId": "u_faruq",
+      "assigneeId": "u_numan",
       "dueDate": "",
       "checklist": [
         {
@@ -554,5 +549,5 @@
       "deleted": false
     }
   ],
-  "updatedAt": 1791725136475
+  "updatedAt": 1791740000000
 }

@@ -92,6 +92,28 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
     };
   }, [currentUser]);
 
+  // Setting Hijri Date Visibility
+  const [showHijri, setShowHijri] = useState(true);
+
+  useEffect(() => {
+    const checkSettings = () => {
+      try {
+        const saved = localStorage.getItem("mqd_setting_hijri");
+        if (saved !== null) {
+          setShowHijri(saved === "true");
+        }
+      } catch {}
+    };
+
+    checkSettings();
+    window.addEventListener("mqd_settings_updated", checkSettings);
+    window.addEventListener("storage", checkSettings);
+    return () => {
+      window.removeEventListener("mqd_settings_updated", checkSettings);
+      window.removeEventListener("storage", checkSettings);
+    };
+  }, []);
+
   // Real-time Indonesian Gregorian & Hijri Date
   const getHeaderDates = () => {
     try {
@@ -187,10 +209,14 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
             <span className="font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
               {headerDates.gregText}
             </span>
-            <span className="text-slate-300 font-bold">/</span>
-            <span className="font-bold text-emerald-800 whitespace-nowrap">
-              {headerDates.hijriText}
-            </span>
+            {showHijri && (
+              <>
+                <span className="text-slate-300 font-bold">/</span>
+                <span className="font-bold text-emerald-800 whitespace-nowrap">
+                  {headerDates.hijriText}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -347,6 +373,10 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                           onClick={() => {
                             setShowRoleMenu(false);
                             if (isCurrent) return;
+                            if (m.id === "u_numan") {
+                              switchUser("admin");
+                              return;
+                            }
                             openMemberModal(m.id);
                           }}
                           className={`w-full flex items-center justify-between p-2 rounded-2xl text-left transition-all cursor-pointer ${

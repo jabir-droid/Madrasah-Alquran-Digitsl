@@ -90,6 +90,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
     }
 
+    if (Array.isArray(body.members)) {
+      body.members = body.members.filter((m: any) => m.id !== "u_faruq" && !m.name?.toLowerCase().includes("faruq"));
+    }
+    if (Array.isArray(body.cards)) {
+      body.cards = body.cards.map((c: any) => c.assigneeId === "u_faruq" ? { ...c, assigneeId: "u_numan" } : c);
+    }
+
     body.updatedAt = body.updatedAt || Date.now();
     memoryCache = body;
 
