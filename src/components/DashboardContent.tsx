@@ -603,46 +603,7 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
         {/* ==================== LEFT MAIN CONTENT (8 Cols) ==================== */}
         <div className="lg:col-span-8 space-y-2.5">
           
-          {/* 1. TOP ROW: Full-Width Horizontal Banner (Roomier & Luxurious) */}
-          <div className="bg-gradient-to-r from-[#064e3b] via-[#047857] to-[#065f46] rounded-2xl p-4 sm:p-5 md:py-4.5 md:px-5.5 text-white relative overflow-hidden shadow-sm shadow-emerald-950/10 border border-emerald-700/50">
-            {/* Ambient Glows & Subtle Decorative Accents */}
-            <div className="absolute -right-8 -top-8 w-44 h-44 rounded-full bg-emerald-300/10 blur-3xl pointer-events-none" />
-            <div className="absolute left-1/3 -bottom-8 w-36 h-36 rounded-full bg-teal-200/10 blur-2xl pointer-events-none" />
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none hidden md:block">
-              <Sparkles size={90} className="text-white rotate-12" />
-            </div>
-
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
-              {/* Left Side: Greeting & Status */}
-              <div className="space-y-1.5 max-w-xl">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[10px] font-semibold text-emerald-100 border border-white/20 shadow-2xs mb-0.5" suppressHydrationWarning>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
-                  Ruang Kerja Dakwah & Madrasah {currentUser?.roleLabel ? `• ${currentUser.roleLabel}` : ""}
-                </div>
-                
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-xs" suppressHydrationWarning>
-                  Assalamu&apos;alaikum, {currentUser?.name || "Sahabat"}! <span className="text-xl">✨</span>
-                </h2>
-                
-                <p className="text-xs sm:text-[13px] text-emerald-100/90 leading-relaxed font-normal">
-                  Pantau kelancaran tugas dakwah, materi kreatif, dan kontribusi seluruh anggota tim hari ini.
-                </p>
-              </div>
-
-              {/* Right Side: Clean Single Primary Action */}
-              <div className="shrink-0 flex items-center">
-                <button 
-                  onClick={() => setActiveTab?.('board')}
-                  className="bg-white hover:bg-emerald-50 text-emerald-950 text-xs sm:text-[13px] font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 group cursor-pointer active:scale-95 whitespace-nowrap"
-                >
-                  Buka Board 
-                  <ArrowRight size={15} className="group-hover:translate-x-1 text-emerald-700 transition-transform" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. STAT CARDS ROW: Compact, Sleek & Ergonomic Glassmorphism Metric Cards */}
+          {/* 1. STAT CARDS ROW: Compact, Sleek & Ergonomic Glassmorphism Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             
             {/* Card 1: Tugas Aktif */}
@@ -714,115 +675,6 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
               </div>
               <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
                 <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </div>
-            </div>
-
-          </div>
-
-
-          {/* 2. ROW 2: Progres Kerja Tim + Aktivitas Terbaru Tim */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
-            
-            {/* Left Card: Progres Kerja Tim */}
-            <div className="md:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm mb-1">Progres Kerja Tim</h4>
-                <p className="text-[11px] text-slate-400 mb-4">Rasio penyelesaian seluruh tugas di ruang kerja</p>
-                
-                {/* Donut Chart Ring */}
-                <div className="flex items-center gap-5 my-2">
-                  <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                      <path
-                        className="text-slate-100"
-                        strokeWidth="3.5"
-                        stroke="currentColor"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                      <path
-                        className="text-[#10b981] transition-all duration-1000"
-                        strokeDasharray={`${percentDone}, 100`}
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        stroke="currentColor"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                    </svg>
-                    <div className="absolute text-center">
-                      <p className="text-xl font-black text-slate-800 leading-none">{percentDone}%</p>
-                      <p className="text-[9px] font-bold text-slate-400 mt-0.5">Total Capaian</p>
-                    </div>
-                  </div>
-
-                  {/* Legend */}
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="flex items-center gap-1.5 text-slate-600 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-[#10b981]"></span> Selesai
-                      </span>
-                      <strong className="text-slate-800">{doneTasks}</strong>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="flex items-center gap-1.5 text-slate-600 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span> Sedang Jalan
-                      </span>
-                      <strong className="text-slate-800">{inProgressCount}</strong>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="flex items-center gap-1.5 text-slate-400 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-slate-300"></span> Belum Mulai
-                      </span>
-                      <strong className="text-slate-600">{notStartedCount}</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Card: Aktivitas Terbaru Tim */}
-            <div className="md:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm">Aktivitas Terbaru Tim</h4>
-                    <p className="text-[11px] text-slate-400">Pembaruan tugas & naskah secara realtime</p>
-                  </div>
-                  <button 
-                    onClick={() => setShowActivityLog(true)}
-                    className="text-xs font-bold text-[#10b981] hover:text-[#059669] cursor-pointer"
-                  >
-                    Lihat Semua &rarr;
-                  </button>
-                </div>
-
-                <div className="space-y-2.5">
-                  {recentActivities.length === 0 ? (
-                    <div className="py-6 text-center text-slate-400 text-xs font-medium">Belum ada riwayat aktivitas terbaru.</div>
-                  ) : recentActivities.map((c, idx) => {
-                    const assignee = members.find(m => m.id === c.assigneeId);
-                    const isDone = c.columnId === "c_2";
-                    const actionText = isDone ? "menyelesaikan tugas" : "memperbarui tugas";
-
-                    return (
-                      <div key={c.id || idx} className="flex items-start justify-between gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-8 h-8 rounded-full ${isDone ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'} flex items-center justify-center shrink-0`}>
-                            {isDone ? <CheckCircle2 size={16} /> : <FileText size={16} />}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate">
-                              <span className="text-[#10b981] font-semibold">{assignee?.name || "Nu'man"}</span> {actionText}
-                            </p>
-                            <p className="text-[11px] text-slate-500 truncate">"{c.title}"</p>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-semibold text-slate-400 shrink-0">Terbaru</span>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             </div>
 
@@ -981,216 +833,110 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
 
         {/* ==================== RIGHT WIDGET PANEL (4 Cols) ==================== */}
         <div className="lg:col-span-4 space-y-3">
-          {/* A. Premium & Clean Interactive Calendar (Kemenag Style: Masehi & Angka Hijriyah Arab) - Compact & Elegant */}
-          <div className="bg-gradient-to-b from-[#f9fbfa] via-emerald-50/25 to-[#f1f8f5]/60 rounded-2xl border border-emerald-900/10 shadow-xs p-3 sm:p-3.5 space-y-2.5 relative overflow-hidden">
-            {/* Ambient subtle Islamic decorative glows */}
-            <div className="absolute -top-16 -right-16 w-36 h-36 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-teal-200/15 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Header: Month title (Satu Baris) + Bawahnya Tulisan Arab Hijriyah, Navigasi < > di Kanan */}
-            <div className="relative z-10 flex items-center justify-between pb-2 border-b border-emerald-950/10 gap-2">
-              {/* Kiri: Icon + Judul 1 Baris + Subtitle Arab di bawahnya */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#064e3b] to-[#047857] text-white flex items-center justify-center shadow-xs shrink-0">
-                  <Calendar size={16} className="stroke-[2.2]" />
+          {/* 1. Progres Kerja Tim (ditaruh di tempat kalender) */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+              <h4 className="font-bold text-slate-800 text-sm mb-1">Progres Kerja Tim</h4>
+              <p className="text-[11px] text-slate-400 mb-4">Rasio penyelesaian seluruh tugas di ruang kerja</p>
+              
+              {/* Donut Chart Ring */}
+              <div className="flex items-center gap-5 my-2">
+                <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-100"
+                      strokeWidth="3.5"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-[#10b981] transition-all duration-1000"
+                      strokeDasharray={`${percentDone}, 100`}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div className="absolute text-center">
+                    <p className="text-xl font-black text-slate-800 leading-none">{percentDone}%</p>
+                    <p className="text-[9px] font-bold text-slate-400 mt-0.5">Total Capaian</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  {/* Tulisan Oktober 2026 DIBUAT SATU BARIS */}
-                  <h4 className="font-black text-slate-900 text-sm sm:text-base leading-tight tracking-tight whitespace-nowrap">
-                    {MONTH_NAMES[calMonth]} {calYear}
-                  </h4>
-                  {/* Bawahnya Tulisan Arab Bulan Hijriyah */}
-                  {showHijri && (
-                    <p className="text-[11px] sm:text-xs font-serif font-bold text-emerald-800 leading-tight tracking-wide truncate mt-0.5">
-                      {getHijriArabicTitle(calYear, calMonth)}
-                    </p>
-                  )}
+
+                {/* Legend */}
+                <div className="space-y-2 text-xs flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-[#10b981]"></span> Selesai
+                    </span>
+                    <strong className="text-slate-800">{doneTasks}</strong>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span> Sedang Jalan
+                    </span>
+                    <strong className="text-slate-800">{inProgressCount}</strong>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-slate-400 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-slate-300"></span> Belum Mulai
+                    </span>
+                    <strong className="text-slate-600">{notStartedCount}</strong>
+                  </div>
                 </div>
               </div>
-
-              {/* Kanan: Tombol Navigasi < > Compact */}
-              <div className="flex items-center gap-0.5 border border-slate-200/90 rounded-xl p-0.5 bg-white/90 shadow-2xs shrink-0">
-                <button 
-                  onClick={handlePrevMonth}
-                  title="Bulan Sebelumnya"
-                  className="p-1 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg transition-all text-slate-600 cursor-pointer active:scale-95"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <div className="h-3 w-px bg-slate-200 mx-0.5" />
-                <button 
-                  onClick={handleNextMonth}
-                  title="Bulan Berikutnya"
-                  className="p-1 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg transition-all text-slate-600 cursor-pointer active:scale-95"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Days of Week Header (Kemenag Style: Ahad Merah, Jum'at Hijau) - Compact */}
-            <div className="relative z-10 grid grid-cols-7 gap-1 bg-white/80 p-1 rounded-xl border border-slate-200/70 text-center shadow-2xs">
-              {DAYS_OF_WEEK.map((d, i) => (
-                <span 
-                  key={i} 
-                  className={`text-[9px] font-black uppercase tracking-wider py-0.5 ${
-                    d.isSunday 
-                      ? "text-rose-600 bg-rose-50/70 rounded-md" 
-                      : d.isFriday 
-                      ? "text-emerald-700 bg-emerald-50/70 rounded-md" 
-                      : "text-slate-500"
-                  }`}
-                >
-                  {d.short}
-                </span>
-              ))}
-            </div>
-
-            {/* Dates Grid: Ukuran Compact, Angka Arab Jelas & Tanpa Bertabrakan */}
-            <div className="relative z-10 grid grid-cols-7 gap-1 text-center">
-              {calendarDays.map((item, idx) => {
-                const now = new Date();
-                const isSelected = item.current && item.day === selectedDay;
-                const isToday = item.current && item.day === now.getDate() && item.month === now.getMonth() && item.year === now.getFullYear();
-                const dayTasks = getTasksForDay(item.day, item.current);
-                const hasTask = dayTasks.length > 0;
-                const hijriDayNumber = getHijriDayNumber(item.year, item.month, item.day);
-                const cellDate = new Date(item.year, item.month, item.day);
-                const isSunday = cellDate.getDay() === 0;
-                const isFriday = cellDate.getDay() === 5;
-
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => item.current && setSelectedDay(item.day)}
-                    className={`h-9.5 sm:h-10 w-full mx-auto flex flex-col justify-between p-1 rounded-xl transition-all relative group cursor-pointer ${
-                      isSelected && isToday
-                        ? "bg-[#064e3b] text-white font-black ring-2 ring-amber-400 ring-offset-1 shadow-xs scale-105 z-10"
-                        : isSelected 
-                        ? "bg-[#064e3b] text-white font-black shadow-xs scale-105 z-10 ring-1.5 ring-emerald-500/40" 
-                        : isToday
-                        ? "bg-amber-100/90 border-2 border-amber-500 text-slate-950 font-black shadow-xs ring-1 ring-amber-300/40 hover:bg-amber-200/90"
-                        : hasTask
-                        ? "bg-emerald-50/80 border border-emerald-200/90 text-slate-800 hover:bg-emerald-100/80 hover:border-emerald-300 shadow-2xs"
-                        : item.current 
-                        ? "bg-white/90 border border-slate-200/70 text-slate-800 hover:bg-white hover:border-emerald-300 shadow-2xs" 
-                        : "bg-slate-100/70 border border-slate-200/60 shadow-2xs cursor-default"
-                    }`}
-                  >
-                    {/* Baris Atas: Angka Hijriyah Arab Jelas & Tidak Tabrakan */}
-                    {showHijri && (
-                      <div className="w-full flex justify-end items-start pr-0.5 leading-none">
-                        <span className={`text-[10px] sm:text-[11px] font-bold font-serif leading-none ${
-                          isSelected 
-                            ? "text-emerald-100" 
-                            : isToday
-                            ? "text-amber-950 font-black"
-                            : isSunday
-                            ? (item.current ? "text-rose-600" : "text-rose-400/80")
-                            : isFriday
-                            ? (item.current ? "text-emerald-700" : "text-emerald-500/80")
-                            : item.current 
-                            ? "text-slate-700 font-bold" 
-                            : "text-slate-400"
-                        }`}>
-                          {toArabicDigits(hijriDayNumber)}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Baris Tengah/Bawah: Tanggal Masehi Latin Rata Tengah */}
-                    <div className="w-full flex justify-center items-center my-auto leading-none">
-                      <span className={`text-xs sm:text-[13px] font-black leading-none ${
-                        isSelected 
-                          ? "text-white" 
-                          : isToday
-                          ? "text-slate-950"
-                          : isSunday
-                          ? (item.current ? "text-rose-600" : "text-rose-400/80") 
-                          : isFriday
-                          ? (item.current ? "text-emerald-800" : "text-emerald-500/80")
-                          : item.current 
-                          ? "text-slate-800" 
-                          : "text-slate-400"
-                      }`}>
-                        {item.day}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            
-            {/* Selected Date Detail Card - Compact & Clean */}
-            <div className="relative z-10 pt-2 border-t border-emerald-950/10 space-y-1.5">
-              <div className="flex items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-slate-800 min-w-0">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                  <span className="font-extrabold text-slate-900 truncate">{selectedDayName}, {selectedDay} {MONTH_NAMES[calMonth]}</span>
-                  {showHijri && (
-                    <>
-                      <span className="text-slate-300 font-normal">•</span>
-                      <span className="text-emerald-700 font-semibold truncate text-[11px]">{selectedHijriFull}</span>
-                    </>
-                  )}
-                </div>
-                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
-                  {tasksOnSelectedDate.length} Agenda
-                </span>
-              </div>
-
-              {/* Task list preview or clean empty state */}
-              {tasksOnSelectedDate.length > 0 ? (
-                <div className="space-y-2">
-                  {tasksOnSelectedDate.map((task) => {
-                    const assignee = members.find(m => m.id === task.assigneeId) || { name: "Tim", color: "#10b981" };
-                    return (
-                      <div 
-                        key={task.id}
-                        onClick={() => setActiveTab?.('board')}
-                        className="p-3 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all cursor-pointer group flex items-center justify-between gap-2 shadow-2xs"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-800 truncate">
-                            {task.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                              task.priority === 'high' 
-                                ? 'bg-rose-100 text-rose-800' 
-                                : 'bg-sky-100 text-sky-800'
-                            }`}>
-                              {task.priority === 'high' ? 'Tinggi' : 'Normal'}
-                            </span>
-                            <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                              PJ: <strong>{assignee.name}</strong>
-                            </span>
-                          </div>
-                        </div>
-
-                        <span className="text-[10px] font-bold text-emerald-700 bg-white border border-slate-200 group-hover:border-emerald-300 px-2 py-1 rounded-xl shrink-0 flex items-center gap-1 shadow-2xs">
-                          <span>Buka</span>
-                          <ArrowRight size={10} />
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="p-3 rounded-2xl bg-slate-50/70 border border-slate-200/60 text-center flex items-center justify-between text-xs text-slate-500">
-                  <span className="text-[11px]">Tidak ada tenggat tugas di tanggal ini.</span>
-                  <button
-                    onClick={() => setActiveTab?.('board')}
-                    className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <span>+ Tambah Tugas</span>
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* B. Prioritas Tugas Bulan Ini */}
+          {/* 2. Aktivitas Terbaru Tim */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm">Aktivitas Terbaru Tim</h4>
+                  <p className="text-[11px] text-slate-400">Pembaruan tugas & naskah secara realtime</p>
+                </div>
+                <button 
+                  onClick={() => setShowActivityLog(true)}
+                  className="text-xs font-bold text-[#10b981] hover:text-[#059669] cursor-pointer"
+                >
+                  Lihat Semua &rarr;
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                {recentActivities.length === 0 ? (
+                  <div className="py-6 text-center text-slate-400 text-xs font-medium">Belum ada riwayat aktivitas terbaru.</div>
+                ) : recentActivities.slice(0, 5).map((c, idx) => {
+                  const assignee = members.find(m => m.id === c.assigneeId);
+                  const isDone = c.columnId === "c_2";
+                  const actionText = isDone ? "menyelesaikan tugas" : "memperbarui tugas";
+
+                  return (
+                    <div key={c.id || idx} className="flex items-start justify-between gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-7 h-7 rounded-full ${isDone ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'} flex items-center justify-center shrink-0`}>
+                          {isDone ? <CheckCircle2 size={14} /> : <FileText size={14} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate">
+                            <span className="text-[#10b981] font-semibold">{assignee?.name || "Nu'man"}</span> {actionText}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">"{c.title}"</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-semibold text-slate-400 shrink-0">Terbaru</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Prioritas Tugas Bulan Ini */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div>
@@ -1241,49 +987,6 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                   <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${lowPercent}%` }}></div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* C. Pintas Ruang Kerja (seperti di foto) */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
-            <div>
-              <h4 className="font-bold text-slate-800 text-sm">Pintas Ruang Kerja</h4>
-              <p className="text-[10px] text-slate-400">Akses cepat modul kerja utama</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                onClick={() => setActiveTab?.('board')}
-                className="p-3 rounded-xl bg-slate-50/70 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all text-left cursor-pointer group flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Papan Kanban</p>
-                  <p className="text-[10px] text-slate-400">Kelola alur kerja</p>
-                </div>
-                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-              </button>
-
-              <button 
-                onClick={() => setActiveTab?.('contents')}
-                className="p-3 rounded-xl bg-slate-50/70 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all text-left cursor-pointer group flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Materi Konten</p>
-                  <p className="text-[10px] text-slate-400">Daftar naskah</p>
-                </div>
-                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-              </button>
-
-              <button 
-                onClick={() => setActiveTab?.('notes')}
-                className="p-3 rounded-xl bg-slate-50/70 hover:bg-emerald-50/60 border border-slate-200/70 hover:border-emerald-200 transition-all text-left cursor-pointer group flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Catatan & SOP</p>
-                  <p className="text-[10px] text-slate-400">Dokumen tim</p>
-                </div>
-                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-              </button>
             </div>
           </div>
 

@@ -559,17 +559,6 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                     <span>Masuk sebagai Admin (PIN)</span>
                   </button>
                 )}
-
-                <button
-                  onClick={() => {
-                    setActiveTab?.('profile');
-                    setShowRoleMenu(false);
-                  }}
-                  className="w-full text-center py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <User size={13} />
-                  <span>Buka Halaman Profil Saya</span>
-                </button>
               </div>
             </div>
           )}

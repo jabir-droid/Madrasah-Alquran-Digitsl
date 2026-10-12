@@ -61,7 +61,6 @@ export default function Sidebar({
     { id: "activity", label: "Aktivitas", icon: <Activity size={18} /> },
     { id: "notifications", label: "Notifikasi", icon: <Bell size={18} />, badge: unreadNotifCount > 0 ? String(unreadNotifCount) : undefined },
     { id: "members", label: "Anggota Tim", icon: <Users size={18} /> },
-    { id: "profile", label: "Profil Saya", icon: <User size={18} /> },
     { id: "settings", label: "Pengaturan", icon: <Settings size={18} /> },
     { id: "guide", label: "Panduan", icon: <Book size={18} /> },
   ];

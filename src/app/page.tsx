@@ -9,7 +9,6 @@ import ContentPlanner from "@/components/ContentPlanner";
 import NotesContent from "@/components/NotesContent";
 import MembersContent from "@/components/MembersContent";
 import ActivityContent from "@/components/ActivityContent";
-import ProfileContent from "@/components/ProfileContent";
 import SettingsContent from "@/components/SettingsContent";
 import NotificationsContent from "@/components/NotificationsContent";
 import GuideModal from "@/components/GuideModal";
@@ -61,7 +60,6 @@ export default function Home() {
           {activeTab === "notes" && <NotesContent />}
           {activeTab === "activity" && <ActivityContent setActiveTab={setActiveTab} />}
           {activeTab === "notifications" && <NotificationsContent setActiveTab={setActiveTab} />}
-          {activeTab === "profile" && <ProfileContent />}
           {activeTab === "settings" && <SettingsContent />}
           {activeTab === "members" && <MembersContent />}
         </main>
