@@ -10,7 +10,7 @@ export default function NotesContent() {
   const { data, addNote, saveNote, removeNote, currentUser } = useAppContext();
 
   const isAdmin = currentUser.role === "admin";
-  const notes = data.notes.sort((a, b) => b.createdAt - a.createdAt);
+  const notes = (data.notes || []).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const links = data.links;
   const sops = data.sops;
 
@@ -23,6 +23,7 @@ export default function NotesContent() {
       setIsAdding(true);
     }
   };
+
 
   const handleSave = () => {
     if (!formData.title) {
@@ -182,7 +183,7 @@ export default function NotesContent() {
                   </h3>
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <p className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
-                      <CalendarDays size={14} /> {note.date || new Date(note.createdAt).toLocaleDateString()}
+                      <CalendarDays size={14} /> {note.date || (note.createdAt ? new Date(note.createdAt).toLocaleDateString() : "-")}
                     </p>
                     {note.category && (
                       <span className="text-[10px] bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full border border-brand-200 font-bold">

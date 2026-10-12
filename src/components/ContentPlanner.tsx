@@ -26,7 +26,7 @@ export default function ContentPlanner() {
       if (filterStatus === "Published") return c.status.toLowerCase().includes("published") || c.status.toLowerCase().includes("done");
       return true;
     })
-    .sort((a, b) => a.order - b.order)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     .map(c => {
       let tColor = "text-slate-600 bg-slate-50";
       let icon = <Layers size={14}/>;

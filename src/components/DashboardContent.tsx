@@ -452,24 +452,9 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
     .sort((a,b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
     .slice(0, 3);
 
-  // Dynamic & 100% Accurate Member Performance breakdown directly from data.members & data.cards
+  // Dynamic & 100% Accurate Member Performance breakdown directly from data.members
   const registeredMembers = [...members];
-  const registeredMemberIds = new Set(registeredMembers.map(m => m.id));
 
-  // Include assignees from cards if not explicitly in data.members
-  cards.forEach(c => {
-    if (c.assigneeId && !registeredMemberIds.has(c.assigneeId)) {
-      const cleanName = c.assigneeId.startsWith("u_") 
-        ? c.assigneeId.slice(2).charAt(0).toUpperCase() + c.assigneeId.slice(3) 
-        : c.assigneeId;
-      registeredMembers.push({
-        id: c.assigneeId,
-        name: cleanName,
-        role: "Anggota Tim",
-      });
-      registeredMemberIds.add(c.assigneeId);
-    }
-  });
 
   const memberPerformanceList = registeredMembers.map((member, idx) => {
     const memberCards = cards.filter(c => 

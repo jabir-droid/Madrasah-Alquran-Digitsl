@@ -38,17 +38,6 @@ export const PRESET_USERS: CurrentUser[] = [
     avatarBg: "bg-purple-600",
     initials: "JB",
     bio: "Spesialis produksi media dakwah, penulisan naskah, kurasi konten sosial media, dan aset visual madrasah."
-  },
-  {
-    id: "u_hammam",
-    name: "Hammam",
-    fullName: "Hammam Mujahid",
-    role: "guru",
-    roleLabel: "Guru / Pengajar",
-    email: "hammam@madrasahquran.id",
-    avatarBg: "bg-blue-600",
-    initials: "HM",
-    bio: "Pendidik Al-Qur'an dan tahsin madrasah, fokus pada bimbingan santri, laporan kelas, dan silabus pembelajaran."
   }
 ];
 
@@ -120,7 +109,109 @@ export function getMemberPin(m: any): string {
   return DEFAULT_ROLE_PINS[role];
 }
 
-type AppState = typeof dbData;
+export interface Member {
+  id: string;
+  name: string;
+  role: string;
+  color?: string;
+  pin?: string;
+  password?: string;
+  fullName?: string;
+  email?: string;
+  bio?: string;
+  [key: string]: any;
+}
+
+export interface Column {
+  id: string;
+  title: string;
+  order: number;
+  updatedAt?: number;
+  isDone?: boolean;
+  [key: string]: any;
+}
+
+export interface Card {
+  id: string;
+  title: string;
+  description?: string;
+  columnId: string;
+  priority?: string;
+  assigneeId?: string;
+  dueDate?: string;
+  month?: string;
+  checklist?: { id: string; text: string; done: boolean }[];
+  report?: string;
+  reportLink?: string;
+  order: number;
+  createdAt?: number;
+  updatedAt?: number;
+  deleted?: boolean;
+  [key: string]: any;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  category?: string;
+  content?: string;
+  date?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  [key: string]: any;
+}
+
+export interface SopItem {
+  id: string;
+  title: string;
+  category?: string;
+  content?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  [key: string]: any;
+}
+
+export interface LinkItem {
+  id: string;
+  title: string;
+  url: string;
+  category?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  [key: string]: any;
+}
+
+export interface ContentItem {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  date?: string;
+  dueDate?: string;
+  pillar?: string;
+  priority?: string;
+  assigneeId?: string;
+  content?: string;
+  order?: number;
+  deleted?: boolean;
+  notes?: string;
+  link?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  [key: string]: any;
+}
+
+export interface AppState {
+  members: Member[];
+  columns: Column[];
+  cards: Card[];
+  notes: Note[];
+  links: LinkItem[];
+  sops: SopItem[];
+  contents: ContentItem[];
+  updatedAt?: number;
+  [key: string]: any;
+}
 
 interface AppContextType {
   data: AppState;
@@ -165,7 +256,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<AppState>(dbData);
+  const [data, setData] = useState<AppState>(dbData as unknown as AppState);
   // Default to Admin Nu'man
   const [currentUser, setCurrentUser] = useState<CurrentUser>(PRESET_USERS[0]);
   const [isAdminVerified, setIsAdminVerified] = useState(true);
@@ -510,8 +601,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (Array.isArray(clean.members)) {
       clean.members = clean.members.filter((m: any) => m.id !== "u_faruq" && !m.name?.toLowerCase().includes("faruq"));
     }
+    const memberIds = new Set((clean.members || []).map((m: any) => m.id));
     if (Array.isArray(clean.cards)) {
-      clean.cards = clean.cards.map((c: any) => c.assigneeId === "u_faruq" ? { ...c, assigneeId: "u_numan" } : c);
+      clean.cards = clean.cards.map((c: any) => {
+        if (c.assigneeId === "u_faruq") {
+          return { ...c, assigneeId: "u_numan" };
+        }
+        if (c.assigneeId && !memberIds.has(c.assigneeId)) {
+          return { ...c, assigneeId: "u_numan" };
+        }
+        return c;
+      });
     }
     return clean;
   };
@@ -523,32 +623,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       let remoteData = await res.json();
       if (remoteData && Array.isArray(remoteData.cards) && Array.isArray(remoteData.members)) {
         remoteData = sanitizeData(remoteData);
-
-        // Compare with local storage to avoid clobbering unsaved local edits
-        const saved = localStorage.getItem("madrasahAppDB");
-        if (saved) {
-          try {
-            let localData = sanitizeData(JSON.parse(saved));
-            const localTime = Number(localData.updatedAt || 0);
-            const remoteTime = Number(remoteData.updatedAt || 0);
-
-            // If local data has newer modifications and has cards, sync local up to server
-            if (localTime > remoteTime && Array.isArray(localData.cards) && localData.cards.length > 0) {
-              fetch("/api/sync", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(localData)
-              }).catch(() => {});
-              setData(localData);
-              localStorage.setItem("madrasahAppDB", JSON.stringify(localData));
-              setSyncStatus("synced");
-              return;
-            }
-          } catch (e) {}
-        }
-
         setData(remoteData);
-        localStorage.setItem("madrasahAppDB", JSON.stringify(remoteData));
+        try {
+          localStorage.setItem("madrasahAppDB", JSON.stringify(remoteData));
+        } catch (e) {}
         setSyncStatus("synced");
       }
     } catch (e) {
@@ -574,8 +652,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // 2. Fetch fresh from server
     fetchRemote();
 
-    // 3. Polling every 5 seconds for realtime multi-user updates
-    const interval = setInterval(fetchRemote, 5000);
+    // 3. Polling every 3 seconds for realtime multi-user updates
+    const interval = setInterval(fetchRemote, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -762,7 +840,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeMember = (id: string) => {
-    saveData({ ...data, members: data.members.filter(m => m.id !== id) });
+    const updatedMembers = data.members.filter(m => m.id !== id);
+    const updatedCards = data.cards.map(c => 
+      c.assigneeId === id ? { ...c, assigneeId: "u_numan" } : c
+    );
+    try {
+      localStorage.removeItem(`mqd_pin_${id}`);
+    } catch {}
+    saveData({ ...data, members: updatedMembers, cards: updatedCards });
   };
 
   const saveMember = (member: any) => {

@@ -83,11 +83,11 @@ export default function BoardContent() {
     }
     const member = members.find(m => m.id === id || m.name.toLowerCase() === id.toLowerCase());
     if (!member) {
-      const cleanName = id.startsWith("u_") ? id.slice(2).charAt(0).toUpperCase() + id.slice(3) : id;
-      const avatarUrl = getMemberAvatar(id) || getMemberAvatar(cleanName);
+      const numan = members.find(m => m.id === "u_numan");
+      const avatarUrl = getMemberAvatar("u_numan") || getMemberAvatar("Nu'man");
       return { 
-        name: cleanName, 
-        initial: cleanName.charAt(0).toUpperCase() || "N", 
+        name: numan?.name || "Nu'man", 
+        initial: "N", 
         color: "bg-emerald-500",
         avatarUrl
       };

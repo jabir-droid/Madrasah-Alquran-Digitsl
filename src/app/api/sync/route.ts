@@ -93,8 +93,14 @@ export async function POST(req: Request) {
     if (Array.isArray(body.members)) {
       body.members = body.members.filter((m: any) => m.id !== "u_faruq" && !m.name?.toLowerCase().includes("faruq"));
     }
+    const memberIds = new Set((body.members || []).map((m: any) => m.id));
     if (Array.isArray(body.cards)) {
-      body.cards = body.cards.map((c: any) => c.assigneeId === "u_faruq" ? { ...c, assigneeId: "u_numan" } : c);
+      body.cards = body.cards.map((c: any) => {
+        if (c.assigneeId === "u_faruq" || (c.assigneeId && !memberIds.has(c.assigneeId))) {
+          return { ...c, assigneeId: "u_numan" };
+        }
+        return c;
+      });
     }
 
     body.updatedAt = body.updatedAt || Date.now();
