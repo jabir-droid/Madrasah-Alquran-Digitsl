@@ -4,7 +4,8 @@ import {
   BookOpen, CheckCircle2, Award, ChevronLeft, ChevronRight, 
   ArrowRight, ArrowUpRight, Clock, Calendar, FileText, X, Plus, 
   KanbanSquare, GraduationCap, ChevronDown, ChevronUp, Sparkles, RefreshCw,
-  SlidersHorizontal, Trash2, RotateCcw, Check, Trophy, Flame, Crown, Medal, CheckSquare
+  SlidersHorizontal, Trash2, RotateCcw, Check, Trophy, Flame, Crown, Medal, CheckSquare,
+  AlertTriangle, BarChart3
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { useState, useEffect } from "react";
@@ -224,6 +225,14 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
   const highPercent = totalPriorityCount ? Math.round((highPriorityCount / totalPriorityCount) * 100) : 0;
   const normalPercent = totalPriorityCount ? Math.round((normalPriorityCount / totalPriorityCount) * 100) : 0;
   const lowPercent = totalPriorityCount ? Math.round((lowPriorityCount / totalPriorityCount) * 100) : 0;
+
+  // Real-time Overdue / Terlambat tasks calculation
+  const todayISO = new Date().toISOString().split("T")[0];
+  const overdueCards = cards.filter(c => {
+    if (c.deleted || c.columnId === "c_2") return false;
+    return Boolean(c.dueDate && c.dueDate < todayISO);
+  });
+  const overdueCount = overdueCards.length;
 
   // Dynamic Premium Calendar State & Computation
   const MONTH_NAMES = [
@@ -580,92 +589,192 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
     : topRajinMembers.slice(0, 4);
 
   return (
-    <div className="pt-2 sm:pt-2.5 pb-6 px-4 sm:px-6 max-w-[1680px] mx-auto animate-in fade-in duration-300">
+    <div className="pt-2 sm:pt-3 pb-8 px-4 sm:px-6 max-w-[1680px] mx-auto space-y-3.5 sm:space-y-4 animate-in fade-in duration-300">
       
-      {/* 2-Column Main Layout: Main Left (8 Cols) & Right Widgets (4 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-3.5 items-start">
-        
-        {/* ==================== LEFT MAIN CONTENT (8 Cols) ==================== */}
-        <div className="lg:col-span-8 space-y-2.5">
-          
-          {/* 1. STAT CARDS ROW: Compact, Sleek & Ergonomic Glassmorphism Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            
-            {/* Card 1: Tugas Aktif */}
-            <div 
-              onClick={() => setActiveTab?.('board')}
-              className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-blue-200 transition-all py-2.5 px-3.5 sm:py-3 sm:px-4 flex items-center justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                  <BookOpen size={17} />
-                </div>
-                <div>
-                  <span className="text-[11px] font-medium text-slate-400 block leading-tight">Tugas Aktif</span>
-                  <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{activeTasksCount}</span>
-                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                      Aktif
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </div>
+      {/* 1. HERO BANNER: Beranda Ikhtisar Tim */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 sm:px-5 sm:py-3.5">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+            <Flame size={20} className="text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                Beranda Ikhtisar Tim
+              </h2>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100">
+                {MONTH_NAMES[calMonth]} {calYear}
+              </span>
             </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Ringkasan performa, leaderboard produktivitas, dan statistik tugas bulan <span className="font-semibold text-slate-700">{MONTH_NAMES[calMonth]} {calYear}</span>
+            </p>
+          </div>
+        </div>
 
-            {/* Card 2: Tugas Tuntas */}
-            <div 
-              onClick={() => setActiveTab?.('board')}
-              className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-200 transition-all py-2.5 px-3.5 sm:py-3 sm:px-4 flex items-center justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                  <CheckCircle2 size={17} />
-                </div>
-                <div>
-                  <span className="text-[11px] font-medium text-slate-400 block leading-tight">Tugas Selesai</span>
-                  <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{doneTasks}</span>
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                      Tuntas
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </div>
-            </div>
-
-            {/* Card 3: Materi Konten */}
-            <div 
-              onClick={() => setActiveTab?.('contents')}
-              className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-200 transition-all py-2.5 px-3.5 sm:py-3 sm:px-4 flex items-center justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/80 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                  <Award size={17} />
-                </div>
-                <div>
-                  <span className="text-[11px] font-medium text-slate-400 block leading-tight">Materi & Konten</span>
-                  <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{contents.filter(c => !c.deleted).length}</span>
-                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
-                      Kreatif
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
-                <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </div>
-            </div>
-
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700">
+            <Calendar size={13} className="text-violet-600" />
+            <span>{MONTH_NAMES[calMonth]} {calYear}</span>
           </div>
 
+          <button
+            onClick={() => setShowHadithModal(true)}
+            title="Kelola Target & Mutiara Hadits"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <SlidersHorizontal size={13} className="text-slate-500" />
+            <span className="hidden sm:inline">Target & Hadits</span>
+          </button>
+        </div>
+      </div>
 
+      {/* 2. STAT CARDS ROW: 5 Modern Balanced Metric Cards Across Full Width */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+        
+        {/* Card 1: TOTAL TUGAS */}
+        <div 
+          onClick={() => setActiveTab?.('board')}
+          className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-violet-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+              Total Tugas
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <BarChart3 size={15} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              {totalTasks}
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+              <span>Bulan ini</span>
+              <ArrowUpRight size={13} className="text-slate-300 group-hover:text-violet-600 transition-colors" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: SELESAI */}
+        <div 
+          onClick={() => setActiveTab?.('board')}
+          className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+              Selesai
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <CheckCircle2 size={15} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              {doneTasks}
+            </div>
+            <div className="space-y-1 mt-1.5">
+              <div className="flex items-center justify-between text-[11px] text-emerald-600 font-semibold">
+                <span>{percentDone}% tercapai</span>
+              </div>
+              <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-700" 
+                  style={{ width: `${percentDone}%` }} 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: SEDANG BERJALAN */}
+        <div 
+          onClick={() => setActiveTab?.('board')}
+          className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+              Sedang Berjalan
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Clock size={15} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              {inProgressCount}
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+              <span>Perlu diselesaikan</span>
+              <ArrowUpRight size={13} className="text-slate-300 group-hover:text-amber-600 transition-colors" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: TERLAMBAT */}
+        <div 
+          onClick={() => setActiveTab?.('board')}
+          className={`bg-white rounded-2xl border transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md ${
+            overdueCount > 0 ? "border-rose-200/90 hover:border-rose-300" : "border-slate-200/80 hover:border-rose-200"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+              Terlambat
+            </span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
+              overdueCount > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-50 text-slate-400"
+            }`}>
+              <AlertTriangle size={15} />
+            </div>
+          </div>
+          <div>
+            <div className={`text-2xl sm:text-3xl font-black tracking-tight leading-none ${
+              overdueCount > 0 ? "text-rose-600" : "text-slate-800"
+            }`}>
+              {overdueCount}
+            </div>
+            <div className="flex items-center justify-between text-[11px] font-medium mt-1.5">
+              <span className={overdueCount > 0 ? "text-rose-600 font-semibold" : "text-slate-400"}>
+                {overdueCount > 0 ? "Melewati tenggat" : "Tepat waktu"}
+              </span>
+              <ArrowUpRight size={13} className="text-slate-300 group-hover:text-rose-600 transition-colors" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: MATERI KONTEN */}
+        <div 
+          onClick={() => setActiveTab?.('contents')}
+          className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-purple-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+              Materi Konten
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Sparkles size={15} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              {contents.filter(c => !c.deleted).length}
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+              <span>{publishedThisWeek} Rilis/Selesai</span>
+              <ArrowUpRight size={13} className="text-slate-300 group-hover:text-purple-600 transition-colors" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3. MAIN 2-COLUMN LAYOUT: Left (Leaderboard & Hadith) & Right (Widgets & Actions) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 items-start">
+        
+        {/* ==================== LEFT MAIN CONTENT (8 Cols) ==================== */}
+        <div className="lg:col-span-8 space-y-3.5">
+          
           {/* SECTION: TOP ANGGOTA PALING RAJIN (LEADERBOARD LENGKAP SEMUA ANGGOTA) */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
             {/* Header Card */}
@@ -715,7 +824,7 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                       <div
                         className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 border ${
                           isRank1
-                            ? "bg-amber-100/90 border-amber-300 text-amber-900"
+                            ? "bg-amber-100/90 border-amber-300 text-amber-900 font-black"
                             : isRank2
                             ? "bg-slate-100 border-slate-300 text-slate-700"
                             : isRank3
@@ -814,11 +923,162 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             )}
           </div>
 
+          {/* SECTION: MUTIARA HIKMAH & HADITS DAKWAH (Islamic Elegance Accent) */}
+          <div className="bg-gradient-to-br from-emerald-950 via-[#064e3b] to-emerald-900 text-white rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
+            {/* Soft Islamic ambient glow */}
+            <div className="absolute -right-8 -bottom-8 w-36 h-36 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
+            
+            <div className="flex items-center justify-between mb-3 relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                  Mutiara Hikmah • {activeHadith.theme}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setHadithIndex((prev) => (prev + 1) % hadithList.length)}
+                  title="Ganti Hadits Berikutnya"
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <RefreshCw size={11} />
+                  <span>Ganti Quote</span>
+                </button>
+                <button
+                  onClick={() => setShowHadithModal(true)}
+                  title="Kelola Hadits & Target"
+                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+                >
+                  <SlidersHorizontal size={12} />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2 relative z-10">
+              <p dir="rtl" className="font-arabic text-base sm:text-lg text-amber-100 font-bold leading-relaxed text-right">
+                {activeHadith.arabic}
+              </p>
+              <p className="text-xs sm:text-sm text-emerald-100/90 leading-snug italic font-normal">
+                "{activeHadith.translation}"
+              </p>
+              <div className="pt-1.5 flex items-center justify-between text-[10px] text-emerald-300/80 border-t border-emerald-800/50">
+                <span>{activeHadith.source}</span>
+                <span className="text-[9px] bg-emerald-800/70 px-2 py-0.5 rounded text-emerald-200">
+                  Kutipan {hadithIndex + 1} dari {hadithList.length}
+                </span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* ==================== RIGHT WIDGET PANEL (4 Cols) ==================== */}
-        <div className="lg:col-span-4 space-y-3">
-          {/* 1. Progres Kerja Tim (ditaruh di tempat kalender) */}
+        <div className="lg:col-span-4 space-y-3.5">
+
+          {/* 1. Prioritas Tugas Bulan Ini */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm">Prioritas Tugas Bulan Ini</h4>
+                <p className="text-[10px] text-slate-400">Distribusi tingkat urgensi tugas aktif</p>
+              </div>
+              <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
+                {totalPriorityCount} Tugas
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Tinggi (High) */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-rose-600 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span> Tinggi (High)
+                  </span>
+                  <span className="text-slate-800 font-bold">{highPriorityCount}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-500 rounded-full transition-all duration-500" style={{ width: `${highPercent}%` }}></div>
+                </div>
+              </div>
+
+              {/* Normal */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-sky-600 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-500"></span> Normal
+                  </span>
+                  <span className="text-slate-800 font-bold">{normalPriorityCount}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-500 rounded-full transition-all duration-500" style={{ width: `${normalPercent}%` }}></div>
+                </div>
+              </div>
+
+              {/* Rendah (Low) */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="text-emerald-600 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Rendah (Low)
+                  </span>
+                  <span className="text-slate-800 font-bold">{lowPriorityCount}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${lowPercent}%` }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Pintas Ruang Kerja (Quick Action Cards) */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm">Pintas Ruang Kerja</h4>
+                <p className="text-[11px] text-slate-400">Akses cepat ke alur kerja utama</p>
+              </div>
+              <span className="text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100 px-2 py-0.5 rounded-full">
+                Pintas Cepat
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Pintas 1: Papan Kanban */}
+              <button
+                onClick={() => setActiveTab?.('board')}
+                className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-blue-200 hover:shadow-xs transition-all text-left group cursor-pointer flex flex-col justify-between h-20"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <KanbanSquare size={14} />
+                  </div>
+                  <ChevronRight size={13} className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Papan Kanban</p>
+                  <p className="text-[10px] text-slate-400 truncate">Kelola alur kerja</p>
+                </div>
+              </button>
+
+              {/* Pintas 2: Materi Konten */}
+              <button
+                onClick={() => setActiveTab?.('contents')}
+                className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-purple-200 hover:shadow-xs transition-all text-left group cursor-pointer flex flex-col justify-between h-20"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Sparkles size={14} />
+                  </div>
+                  <ChevronRight size={13} className="text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800 group-hover:text-purple-600 transition-colors">Materi Konten</p>
+                  <p className="text-[10px] text-slate-400 truncate">Daftar naskah</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Progres Kerja Tim (Donut Ring Chart) */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
             <div>
               <h4 className="font-bold text-slate-800 text-sm mb-1">Progres Kerja Tim</h4>
@@ -876,7 +1136,7 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             </div>
           </div>
 
-          {/* 2. Aktivitas Terbaru Tim */}
+          {/* 4. Aktivitas Terbaru Tim */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -917,60 +1177,6 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Prioritas Tugas Bulan Ini */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Prioritas Tugas Bulan Ini</h4>
-                <p className="text-[10px] text-slate-400">Distribusi tingkat urgensi tugas aktif</p>
-              </div>
-              <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
-                {totalPriorityCount} Tugas
-              </span>
-            </div>
-
-            <div className="space-y-2.5">
-              {/* Tinggi (High) */}
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-rose-600 font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500"></span> Tinggi (High)
-                  </span>
-                  <span className="text-slate-800 font-bold">{highPriorityCount}</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-rose-500 rounded-full transition-all duration-500" style={{ width: `${highPercent}%` }}></div>
-                </div>
-              </div>
-
-              {/* Normal */}
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-sky-600 font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-sky-500"></span> Normal
-                  </span>
-                  <span className="text-slate-800 font-bold">{normalPriorityCount}</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-sky-500 rounded-full transition-all duration-500" style={{ width: `${normalPercent}%` }}></div>
-                </div>
-              </div>
-
-              {/* Rendah (Low) */}
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-emerald-600 font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Rendah (Low)
-                  </span>
-                  <span className="text-slate-800 font-bold">{lowPriorityCount}</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${lowPercent}%` }}></div>
-                </div>
               </div>
             </div>
           </div>
