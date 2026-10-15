@@ -189,24 +189,24 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
   }, []);
 
   return (
-    <header className="h-16 bg-[#f8fafc] border-b border-slate-200/60 flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-20">
+    <header className="h-13 sm:h-14 bg-[#f8fafc] border-b border-slate-200/60 flex items-center justify-between px-3.5 sm:px-5 shrink-0 sticky top-0 z-20">
       {/* Left: Sidebar Toggle + Full Indonesian & Hijri Date (Gantikan Search) */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
             title="Buka / Tutup Sidebar"
-            className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 rounded-xl transition-colors cursor-pointer"
+            className="lg:hidden p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer"
           >
-            <Menu size={20} />
+            <Menu size={18} />
           </button>
         )}
 
-        <div className="flex items-center gap-2.5 bg-white/90 border border-slate-200/90 px-3 py-1.5 rounded-2xl shadow-2xs" suppressHydrationWarning>
-          <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0">
-            <Calendar size={15} className="stroke-[2.2]" />
+        <div className="flex items-center gap-2 bg-white/95 border border-slate-200/90 px-2.5 py-1 rounded-xl shadow-2xs" suppressHydrationWarning>
+          <div className="w-6 h-6 rounded-md bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0">
+            <Calendar size={13} className="stroke-[2.2]" />
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 text-xs" suppressHydrationWarning>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs" suppressHydrationWarning>
             <span className="font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
               {headerDates.gregText}
             </span>
@@ -223,12 +223,12 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
       </div>
 
       {/* Center: Live Real-Time Clock */}
-      <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs" suppressHydrationWarning>
-        <Clock size={15} className="text-emerald-700 animate-pulse shrink-0" />
-        <span className="font-mono text-xs sm:text-[13px] font-black text-slate-800 tracking-wider tabular-nums" suppressHydrationWarning>
+      <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 shadow-2xs" suppressHydrationWarning>
+        <Clock size={13} className="text-emerald-700 animate-pulse shrink-0" />
+        <span className="font-mono text-xs font-black text-slate-800 tracking-wider tabular-nums" suppressHydrationWarning>
           {currentTime || "18:58:24"}
         </span>
-        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200/70">
           WIB
         </span>
       </div>
@@ -239,7 +239,7 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
         <button
           onClick={() => syncNow()}
           title="Status Sinkronisasi Cloud. Klik untuk memperbarui data sekarang."
-          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+          className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer ${
             syncStatus === "syncing"
               ? "bg-amber-50 text-amber-700 border-amber-200 animate-pulse"
               : syncStatus === "error"
@@ -247,7 +247,7 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
               : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
           }`}
         >
-          <span className={`w-2 h-2 rounded-full shrink-0 ${
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
             syncStatus === "syncing" ? "bg-amber-500 animate-ping" : syncStatus === "error" ? "bg-rose-500" : "bg-emerald-500"
           }`}></span>
           <span>{syncStatus === "syncing" ? "Menyinkronkan..." : syncStatus === "error" ? "Offline" : "Sinkron Cloud"}</span>
@@ -258,13 +258,13 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
           <button 
             onClick={() => setShowRoleMenu(!showRoleMenu)}
             title="Ganti Peran / Buka Profil"
-            className={`flex items-center gap-2 sm:gap-2.5 p-1 sm:pr-2.5 rounded-2xl transition-all cursor-pointer border ${
+            className={`flex items-center gap-2 p-0.5 sm:pr-2 rounded-xl transition-all cursor-pointer border ${
               activeTab === 'profile' || showRoleMenu
                 ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-500/20'
                 : 'border-slate-200/60 bg-white hover:bg-slate-50 shadow-2xs'
             }`}
           >
-            <div className={`w-8 h-8 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center text-xs font-bold ring-2 ring-white shadow-xs overflow-hidden`}>
+            <div className={`w-7 h-7 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center text-[11px] font-bold ring-2 ring-white shadow-xs overflow-hidden`}>
               {userAvatarUrl ? (
                 <img src={userAvatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
               ) : (
@@ -272,19 +272,19 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
               )}
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-xs font-bold text-slate-800 leading-tight flex items-center gap-1.5">
+              <p className="text-xs font-bold text-slate-800 leading-tight flex items-center gap-1">
                 {currentUser.name}
                 {currentUser.role === "admin" ? (
-                  <ShieldCheck size={12} className="text-emerald-600" />
+                  <ShieldCheck size={11} className="text-emerald-600" />
                 ) : currentUser.role === "kreatif" ? (
-                  <Layers size={12} className="text-slate-400" />
+                  <Layers size={11} className="text-slate-400" />
                 ) : (
-                  <BookOpen size={12} className="text-slate-400" />
+                  <BookOpen size={11} className="text-slate-400" />
                 )}
               </p>
-              <p className="text-[10px] font-semibold text-slate-400">{currentUser.roleLabel}</p>
+              <p className="text-[9px] font-semibold text-slate-400">{currentUser.roleLabel}</p>
             </div>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform hidden sm:block ${showRoleMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`text-slate-400 transition-transform hidden sm:block ${showRoleMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Dropdown Menu: Real Account Status & Admin Verification */}

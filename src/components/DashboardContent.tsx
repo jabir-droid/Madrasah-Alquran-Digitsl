@@ -593,58 +593,58 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
     : topRajinMembers.slice(0, 4);
 
   return (
-    <div className="pt-2 sm:pt-3 pb-8 px-4 sm:px-6 max-w-[1680px] mx-auto space-y-3.5 sm:space-y-4 animate-in fade-in duration-300">
+    <div className="pt-2 pb-6 px-3.5 sm:px-5 max-w-[1600px] mx-auto space-y-3 sm:space-y-3.5 animate-in fade-in duration-300">
       
       {/* 1. HERO BANNER: Beranda Ikhtisar Tim */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 sm:px-5 sm:py-3.5">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
-            <Flame size={20} className="text-amber-300" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] p-3 sm:px-4 sm:py-2.5">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-sm shadow-indigo-500/20 shrink-0">
+            <Flame size={18} className="text-amber-300" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+              <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
                 Beranda Ikhtisar Tim
               </h2>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-50 text-violet-700 border border-violet-100">
                 {MONTH_NAMES[calMonth]} {calYear}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5">
               Ringkasan performa, leaderboard produktivitas, dan statistik tugas bulan <span className="font-semibold text-slate-700">{MONTH_NAMES[calMonth]} {calYear}</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-center">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700">
-            <Calendar size={13} className="text-violet-600" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80 text-[11px] font-bold text-slate-700">
+            <Calendar size={12} className="text-violet-600" />
             <span>{MONTH_NAMES[calMonth]} {calYear}</span>
           </div>
         </div>
       </div>
 
       {/* 2. STAT CARDS ROW: 5 Modern Balanced Metric Cards Across Full Width */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
         
         {/* Card 1: TOTAL TUGAS */}
         <div 
           onClick={() => setActiveTab?.('board')}
-          className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-violet-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+          className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-violet-200 transition-all p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Total Tugas
             </span>
-            <div className="w-8 h-8 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <BarChart3 size={15} />
+            <div className="w-7 h-7 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <BarChart3 size={14} />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
               {totalTasks}
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-1">
               <span>Bulan ini</span>
               <ArrowUpRight size={13} className="text-slate-300 group-hover:text-violet-600 transition-colors" />
             </div>
@@ -654,22 +654,22 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
         {/* Card 2: SELESAI */}
         <div 
           onClick={() => setActiveTab?.('board')}
-          className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+          className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-200 transition-all p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Selesai
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <CheckCircle2 size={15} />
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <CheckCircle2 size={14} />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
               {doneTasks}
             </div>
-            <div className="space-y-1 mt-1.5">
-              <div className="flex items-center justify-between text-[11px] text-emerald-600 font-semibold">
+            <div className="space-y-1 mt-1">
+              <div className="flex items-center justify-between text-[10px] text-emerald-600 font-semibold">
                 <span>{percentDone}% tercapai</span>
               </div>
               <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -685,21 +685,21 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
         {/* Card 3: SEDANG BERJALAN */}
         <div 
           onClick={() => setActiveTab?.('board')}
-          className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+          className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-200 transition-all p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Sedang Berjalan
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <Clock size={15} />
+            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Clock size={14} />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
               {inProgressCount}
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-1">
               <span>Perlu diselesaikan</span>
               <ArrowUpRight size={13} className="text-slate-300 group-hover:text-amber-600 transition-colors" />
             </div>
@@ -709,27 +709,27 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
         {/* Card 4: TERLAMBAT */}
         <div 
           onClick={() => setActiveTab?.('board')}
-          className={`bg-white rounded-2xl border transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md ${
+          className={`bg-white rounded-xl border transition-all p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md ${
             overdueCount > 0 ? "border-rose-200/90 hover:border-rose-300" : "border-slate-200/80 hover:border-rose-200"
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Terlambat
             </span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
               overdueCount > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-50 text-slate-400"
             }`}>
-              <AlertTriangle size={15} />
+              <AlertTriangle size={14} />
             </div>
           </div>
           <div>
-            <div className={`text-2xl sm:text-3xl font-black tracking-tight leading-none ${
+            <div className={`text-xl sm:text-2xl font-black tracking-tight leading-none ${
               overdueCount > 0 ? "text-rose-600" : "text-slate-800"
             }`}>
               {overdueCount}
             </div>
-            <div className="flex items-center justify-between text-[11px] font-medium mt-1.5">
+            <div className="flex items-center justify-between text-[10px] font-medium mt-1">
               <span className={overdueCount > 0 ? "text-rose-600 font-semibold" : "text-slate-400"}>
                 {overdueCount > 0 ? "Melewati tenggat" : "Tepat waktu"}
               </span>
@@ -741,21 +741,21 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
         {/* Card 5: MATERI KONTEN */}
         <div 
           onClick={() => setActiveTab?.('contents')}
-          className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-purple-200 transition-all p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
+          className="col-span-2 sm:col-span-1 bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-purple-200 transition-all p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 duration-200"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Materi Konten
             </span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <Sparkles size={15} />
+            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Sparkles size={14} />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+            <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
               {contents.filter(c => !c.deleted).length}
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium mt-1.5">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-1">
               <span>{publishedThisWeek} Rilis/Selesai</span>
               <ArrowUpRight size={13} className="text-slate-300 group-hover:text-purple-600 transition-colors" />
             </div>

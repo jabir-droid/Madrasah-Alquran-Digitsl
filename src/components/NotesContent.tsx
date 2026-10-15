@@ -37,24 +37,24 @@ export default function NotesContent() {
   if (isAdding && tab !== 'link') {
     const isRapat = tab === "rapat";
     return (
-      <div className="p-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={() => setIsAdding(false)} className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-brand-600 transition-colors">
-            <span className="text-lg">←</span> Kembali ke daftar {isRapat ? "" : "SOP"}
+      <div className="p-3.5 sm:p-5 lg:p-6 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => setIsAdding(false)} className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-brand-600 transition-colors">
+            <span className="text-base">←</span> Kembali ke daftar {isRapat ? "" : "SOP"}
           </button>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Sync | Tersimpan
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Sync | Tersimpan
             </div>
-            <button className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
+            <button className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-lg shadow-2xs hover:bg-slate-50 transition-colors">
               ⛶ Layar Penuh
             </button>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-            <Edit3 className="text-brand-600" /> {isRapat ? "Catatan rapat baru" : "Buat SOP Baru"}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-xs">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <Edit3 size={18} className="text-brand-600" /> {isRapat ? "Catatan rapat baru" : "Buat SOP Baru"}
           </h2>
 
           <div className="space-y-6">
@@ -148,34 +148,34 @@ export default function NotesContent() {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-slate-100 p-1.5 rounded-xl flex items-center mb-8">
-        <button onClick={() => setTab("rapat")} className={`flex-1 py-2.5 font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-all ${tab === 'rapat' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-          <Edit3 size={16} /> Rapat ({notes.length})
+    <div className="p-3.5 sm:p-5 lg:p-6 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="bg-slate-100 p-1 rounded-xl flex items-center mb-4">
+        <button onClick={() => setTab("rapat")} className={`flex-1 py-1.5 font-bold text-xs sm:text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all ${tab === 'rapat' ? 'bg-white text-brand-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}>
+          <Edit3 size={15} /> Rapat ({notes.length})
         </button>
-        <button onClick={() => setTab("sop")} className={`flex-1 py-2.5 font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-all ${tab === 'sop' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-          <BookOpen size={16} /> SOP Tim ({sops.length})
+        <button onClick={() => setTab("sop")} className={`flex-1 py-1.5 font-bold text-xs sm:text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all ${tab === 'sop' ? 'bg-white text-brand-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}>
+          <BookOpen size={15} /> SOP Tim ({sops.length})
         </button>
-        <button onClick={() => setTab("link")} className={`flex-1 py-2.5 font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-all ${tab === 'link' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-          <LinkIcon size={16} /> Link penting ({links.length})
+        <button onClick={() => setTab("link")} className={`flex-1 py-1.5 font-bold text-xs sm:text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all ${tab === 'link' ? 'bg-white text-brand-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}>
+          <LinkIcon size={15} /> Link penting ({links.length})
         </button>
       </div>
 
       {tab === "sop" && !isAdmin ? (
-        <div className="w-full py-3 px-4 border border-slate-200 bg-slate-50 rounded-2xl flex items-center justify-center gap-2 text-slate-600 text-xs font-bold mb-8">
-          <Lock size={14} className="text-slate-500" />
+        <div className="w-full py-2.5 px-3.5 border border-slate-200 bg-slate-50 rounded-xl flex items-center justify-center gap-2 text-slate-600 text-xs font-bold mb-4">
+          <Lock size={13} className="text-slate-500" />
           <span>SOP Operasional dikelola resmi oleh Admin (Mode Baca untuk Anggota & Guru)</span>
         </div>
       ) : (
-        <button onClick={handleAdd} className="w-full py-4 border-2 border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50 rounded-2xl flex items-center justify-center gap-2 text-brand-600 font-bold mb-8 transition-colors bg-white cursor-pointer">
-          <Plus size={18} /> Tambah Data Baru
+        <button onClick={handleAdd} className="w-full py-2.5 border-2 border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50 rounded-xl flex items-center justify-center gap-2 text-brand-600 text-xs sm:text-sm font-bold mb-4 transition-colors bg-white cursor-pointer">
+          <Plus size={16} /> Tambah Data Baru
         </button>
       )}
 
       {tab === "rapat" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {notes.map((note) => (
-            <div key={note.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-brand-300 transition-all group flex flex-col h-full">
+            <div key={note.id} className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-brand-300 transition-all group flex flex-col h-full">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 min-w-0 pr-4">
                   <h3 className="text-lg font-bold text-slate-800 mb-2 truncate">
