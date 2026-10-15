@@ -57,28 +57,22 @@ export default function LoginPage() {
         }}
       />
 
-      {/* Top Bar Navigation */}
-      <header className="relative z-10 w-full max-w-6xl mx-auto px-5 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold backdrop-blur-sm shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Portal Ruang Kerja Resmi</span>
-        </div>
-
-        <button
-          onClick={() => setShowAdminContactModal(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-emerald-300 hover:text-white border border-emerald-500/20 text-xs font-semibold transition-all cursor-pointer backdrop-blur-sm shadow-xs"
-        >
-          <HelpCircle size={14} className="text-emerald-400" />
-          <span>Bantuan / Hubungi Admin</span>
-        </button>
-      </header>
-
       {/* Main Container */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-6 sm:py-10">
         <div className="w-full max-w-md">
 
           {/* Login Card */}
-          <div className="bg-[#0e1728]/95 backdrop-blur-2xl border border-emerald-500/20 hover:border-emerald-500/30 shadow-2xl shadow-black/80 rounded-3xl p-6 sm:p-8 space-y-6 transition-all">
+          <div className="relative bg-[#0e1728]/95 backdrop-blur-2xl border border-emerald-500/20 hover:border-emerald-500/30 shadow-2xl shadow-black/80 rounded-3xl p-6 sm:p-8 space-y-6 transition-all">
+            
+            {/* Tombol Bantuan '?' di Pojok Kanan Atas Kartu */}
+            <button
+              type="button"
+              onClick={() => setShowAdminContactModal(true)}
+              title="Bantuan / Hubungi Admin"
+              className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-emerald-500/20 border border-slate-700/70 hover:border-emerald-500/40 text-slate-400 hover:text-emerald-300 flex items-center justify-center transition-all cursor-pointer group shadow-2xs"
+            >
+              <HelpCircle size={16} className="group-hover:scale-110 transition-transform text-slate-400 group-hover:text-emerald-400" />
+            </button>
             
             {/* Header Branding (Foto 3 replacing Foto 2) */}
             <div className="flex flex-col items-center text-center space-y-2 pb-1">
