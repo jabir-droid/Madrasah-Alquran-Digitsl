@@ -1041,15 +1041,15 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
           </div>
 
           {/* SECTION: PEMBERITAHUAN & ARAHAN PENTING ADMIN */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6 relative overflow-hidden space-y-4 hover:border-emerald-200/90 transition-all">
+          <div className="bg-gradient-to-br from-emerald-50/80 via-emerald-50/50 to-teal-50/40 rounded-3xl border border-emerald-200/80 shadow-xs p-5 sm:p-6 relative overflow-hidden space-y-4 hover:border-emerald-300 transition-all">
             {/* Header Pengumuman */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-emerald-100/90">
               <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
                   <Megaphone size={22} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-emerald-900/70 font-medium">
                     Oleh <strong className="text-slate-900 font-bold">{announcement.author}</strong> ({announcement.authorRole})
                   </p>
                   <h4 className="font-extrabold text-slate-900 text-base sm:text-lg mt-0.5 leading-snug tracking-tight">
@@ -1063,13 +1063,13 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                 <button
                   onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
                   title={isAdminVerified ? "Edit Catatan Pengumuman" : "Verifikasi PIN Admin untuk Mengedit"}
-                  className="self-start sm:self-center flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+                  className="self-start sm:self-center flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50/90 border border-emerald-200 hover:border-emerald-300 text-emerald-800 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
                 >
                   <Edit3 size={14} className="text-emerald-600" />
                   <span>Edit Catatan</span>
                 </button>
               ) : (
-                <div className="self-start sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shrink-0 shadow-2xs">
+                <div className="self-start sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 border border-emerald-200 text-emerald-800 text-xs font-semibold shrink-0 shadow-2xs">
                   <Shield size={12} className="text-emerald-600" />
                   <span>Arahan Resmi</span>
                 </div>
@@ -1089,7 +1089,7 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                   {announcement.bullets.map((bullet, idx) => (
                     <div 
                       key={idx} 
-                      className="flex items-start gap-3.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 hover:border-emerald-200/90 transition-all shadow-2xs"
+                      className="flex items-start gap-3.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-emerald-100/90 hover:border-emerald-200/90 transition-all shadow-2xs"
                     >
                       <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {idx + 1}
@@ -1104,12 +1104,12 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             </div>
 
             {/* Footer Pin status */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs pt-3 border-t border-slate-100">
-              <span className="flex items-center gap-2 text-slate-500 font-medium">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs pt-3 border-t border-emerald-100/90">
+              <span className="flex items-center gap-2 text-emerald-900/70 font-medium">
                 <Pin size={14} className="text-emerald-600 shrink-0" />
                 <span>Disematkan untuk seluruh Tim Madrasah Al-Qur'an Digital</span>
               </span>
-              <span className="self-start sm:self-center text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 rounded-lg text-[11px] shadow-2xs">
+              <span className="self-start sm:self-center text-emerald-800 font-semibold bg-white border border-emerald-200 px-2.5 py-1 rounded-lg text-[11px] shadow-2xs">
                 {announcement.date.startsWith("Periode") ? announcement.date : `Periode ${announcement.date}`}
               </span>
             </div>
