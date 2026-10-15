@@ -57,25 +57,16 @@ export default function LoginPage() {
         }}
       />
 
-      {/* Top Bar Branding */}
+      {/* Top Bar Navigation */}
       <header className="relative z-10 w-full max-w-6xl mx-auto px-5 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25 border border-emerald-300/30">
-            <BookOpen size={20} className="stroke-[2.5]" />
-          </div>
-          <div>
-            <h1 className="text-white font-extrabold text-sm sm:text-base tracking-tight leading-tight flex items-center gap-2">
-              MADRASAH AL-QUR'AN DIGITAL
-            </h1>
-            <p className="text-[11px] text-emerald-400/80 font-medium tracking-wide">
-              Ruang Kerja Kolaborasi & Manajemen Dakwah
-            </p>
-          </div>
+        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold backdrop-blur-sm shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Portal Ruang Kerja Resmi</span>
         </div>
 
         <button
           onClick={() => setShowAdminContactModal(true)}
-          className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-emerald-300 hover:text-white border border-emerald-500/20 text-xs font-semibold transition-all cursor-pointer backdrop-blur-sm shadow-xs"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-emerald-300 hover:text-white border border-emerald-500/20 text-xs font-semibold transition-all cursor-pointer backdrop-blur-sm shadow-xs"
         >
           <HelpCircle size={14} className="text-emerald-400" />
           <span>Bantuan / Hubungi Admin</span>
@@ -87,20 +78,20 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
 
           {/* Login Card */}
-          <div className="bg-[#0f192b]/90 backdrop-blur-xl border border-slate-700/60 shadow-2xl shadow-black/60 rounded-3xl p-6 sm:p-8 space-y-6">
+          <div className="bg-[#0e1728]/95 backdrop-blur-2xl border border-emerald-500/20 hover:border-emerald-500/30 shadow-2xl shadow-black/80 rounded-3xl p-6 sm:p-8 space-y-6 transition-all">
             
-            {/* Greeting & Arabic Quote */}
-            <div className="text-center space-y-2">
-              <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-bold tracking-wider uppercase mb-1">
-                Portal Masuk Petugas
-              </span>
-              <p className="text-emerald-300/80 font-serif text-sm tracking-wide">
-                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-              </p>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                Selamat Datang di Sistem
+            {/* Header Branding (Foto 3 replacing Foto 2) */}
+            <div className="flex flex-col items-center text-center space-y-2 pb-1">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-xl shadow-emerald-500/30 border border-emerald-300/40 mb-1 hover:scale-105 transition-transform">
+                <BookOpen size={28} className="stroke-[2.5]" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase leading-snug">
+                MADRASAH AL-QUR'AN DIGITAL
               </h2>
-              <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-emerald-400 font-semibold tracking-wide">
+                Ruang Kerja Kolaborasi &amp; Manajemen Dakwah
+              </p>
+              <p className="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed pt-1">
                 Silakan masuk menggunakan nama dan kata sandi yang telah dibuatkan oleh Admin.
               </p>
             </div>
