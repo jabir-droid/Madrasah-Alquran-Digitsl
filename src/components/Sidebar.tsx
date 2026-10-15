@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { 
-  LayoutGrid, KanbanSquare, BookOpen, FileText, Activity, 
-  Book, Users, LogOut, X, Bell, User, Settings 
+  Flame, KanbanSquare, Sparkles, FileText, Activity, 
+  Book, BookOpen, Users, LogOut, X, Bell, Settings, Download 
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 
@@ -22,7 +22,7 @@ export default function Sidebar({
   isMobileOpen,
   setIsMobileOpen
 }: SidebarProps) {
-  const { data, currentUser, logout } = useAppContext();
+  const { data, logout } = useAppContext();
 
   // Real-time unread notification count
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
@@ -53,20 +53,55 @@ export default function Sidebar({
     };
   }, []);
 
-  const menus = [
-    { id: "dashboard", label: "Dashboard", icon: <LayoutGrid size={18} /> },
-    { id: "board", label: "Papan Tugas", icon: <KanbanSquare size={18} /> },
-    { id: "contents", label: "Materi Konten", icon: <BookOpen size={18} /> },
-    { id: "notes", label: "Catatan & SOP", icon: <FileText size={18} /> },
-    { id: "activity", label: "Aktivitas", icon: <Activity size={18} /> },
-    { id: "notifications", label: "Notifikasi", icon: <Bell size={18} />, badge: unreadNotifCount > 0 ? String(unreadNotifCount) : undefined },
-    { id: "members", label: "Anggota Tim", icon: <Users size={18} /> },
-    { id: "settings", label: "Pengaturan", icon: <Settings size={18} /> },
-    { id: "guide", label: "Panduan", icon: <Book size={18} /> },
+  const handleExportBackup = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `madrasah_quran_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      alert("Cadangan database JSON berhasil diunduh ke perangkat Anda!");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const menuSections = [
+    {
+      title: "MANAJEMEN UTAMA",
+      items: [
+        { id: "dashboard", label: "Beranda", icon: <Flame size={17} /> },
+        { id: "board", label: "Board & Tugas", icon: <KanbanSquare size={17} /> },
+      ]
+    },
+    {
+      title: "KONTEN & DOKUMEN",
+      items: [
+        { id: "contents", label: "Materi Konten", icon: <Sparkles size={17} /> },
+        { id: "notes", label: "Catatan & SOP", icon: <FileText size={17} /> },
+      ]
+    },
+    {
+      title: "LAINNYA",
+      items: [
+        { id: "activity", label: "Aktivitas", icon: <Activity size={17} />, badge: "4" },
+        { id: "notifications", label: "Notifikasi", icon: <Bell size={17} />, badge: unreadNotifCount > 0 ? String(unreadNotifCount) : undefined },
+        { id: "guide", label: "Panduan", icon: <Book size={17} /> },
+        { id: "members", label: "Anggota", icon: <Users size={17} /> },
+        { id: "settings", label: "Pengaturan", icon: <Settings size={17} /> },
+        { id: "export_json", label: "Export JSON", icon: <Download size={17} />, isAction: true },
+      ]
+    }
   ];
 
-  const handleMenuClick = (id: string) => {
-    setActiveTab(id);
+  const handleItemClick = (item: any) => {
+    if (item.isAction && item.id === "export_json") {
+      handleExportBackup();
+      return;
+    }
+    setActiveTab(item.id);
     if (setIsMobileOpen) {
       setIsMobileOpen(false);
     }
@@ -92,7 +127,7 @@ export default function Sidebar({
         <div className="flex-1 flex flex-col min-h-0">
           
           {/* Header Brand: Permanent Logo & Title */}
-          <div className="p-3.5 py-4 flex items-center justify-between border-b border-slate-800/60">
+          <div className="p-3.5 py-4 flex items-center justify-between border-b border-slate-800/60 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               {/* Emerald Squircle Logo Badge */}
               <div className="w-9 h-9 rounded-xl bg-[#10b981] shadow-md shadow-emerald-500/20 flex items-center justify-center shrink-0 transition-transform hover:scale-105">
@@ -121,64 +156,62 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* Menus List: Permanently visible labels & icons */}
-          <div className="flex-1 overflow-y-auto px-2.5 py-3 flex flex-col gap-1 no-scrollbar">
-            {menus.map((menu) => {
-              const isActive = activeTab === menu.id;
+          {/* Menus List: Grouped by Categories (Foto 2) */}
+          <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 no-scrollbar">
+            {menuSections.map((section, sIdx) => (
+              <div key={sIdx} className="space-y-1">
+                {/* Section Header */}
+                <p className="text-[10px] font-extrabold text-slate-400/80 px-3 py-1 tracking-wider uppercase select-none">
+                  {section.title}
+                </p>
 
-              return (
-                <button
-                  key={menu.id}
-                  onClick={() => handleMenuClick(menu.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200 cursor-pointer relative group ${
-                    isActive
-                      ? "bg-[#10b981] text-white font-bold shadow-md shadow-emerald-500/25"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 font-semibold"
-                  }`}
-                >
-                  {/* Icon */}
-                  <span className={`shrink-0 flex items-center justify-center w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-100"}`}>
-                    {menu.icon}
-                  </span>
+                {/* Section Items */}
+                <div className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const isActive = !item.isAction && activeTab === item.id;
 
-                  {/* Label */}
-                  <span className="truncate text-left whitespace-nowrap font-medium">
-                    {menu.label}
-                  </span>
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleItemClick(item)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition-all duration-200 cursor-pointer relative group ${
+                          isActive
+                            ? "bg-[#10b981] text-white font-bold shadow-md shadow-emerald-500/25"
+                            : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 font-semibold"
+                        }`}
+                      >
+                        {/* Icon */}
+                        <span className={`shrink-0 flex items-center justify-center w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-100"}`}>
+                          {item.icon}
+                        </span>
 
-                  {/* Badge */}
-                  {menu.badge && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[#10b981] text-white ml-auto shrink-0 shadow-2xs border border-emerald-400/40">
-                      {menu.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                        {/* Label */}
+                        <span className="truncate text-left whitespace-nowrap font-medium">
+                          {item.label}
+                        </span>
+
+                        {/* Badge */}
+                        {item.badge && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ml-auto shrink-0 shadow-2xs ${
+                            isActive 
+                              ? "bg-white text-emerald-800 font-extrabold" 
+                              : "bg-[#10b981] text-white border border-emerald-400/40"
+                          }`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
 
         </div>
 
-        {/* Bottom Section: Permanent Tombol Keluar & Status Cloud Sync */}
-        <div className="p-3 border-t border-slate-800/80 bg-[#0b1320] flex flex-col gap-2">
-          {/* User Profile Info Card */}
-          <div className="p-2.5 rounded-xl bg-[#131d2e] border border-slate-700/60 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className={`w-7 h-7 rounded-lg ${currentUser.avatarBg || 'bg-emerald-600'} text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-2xs`}>
-                {currentUser.initials}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-white truncate leading-tight">
-                  {currentUser.name}
-                </p>
-                <p className="text-[10px] text-emerald-400 truncate font-medium">
-                  {currentUser.role === "admin" ? "Admin" : currentUser.role === "kreatif" ? "Tim Kreatif" : "Guru"}
-                </p>
-              </div>
-            </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="Aktif" />
-          </div>
-
+        {/* Bottom Section: Permanent Tombol Keluar Saja */}
+        <div className="p-3 border-t border-slate-800/80 bg-[#0b1320] shrink-0">
           {/* Action Pill "Keluar" */}
           <button
             onClick={() => {
@@ -196,14 +229,6 @@ export default function Sidebar({
               Keluar
             </span>
           </button>
-
-          {/* Realtime Status Indicator */}
-          <div className="flex items-center gap-2 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 relative shrink-0">
-              <div className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75"></div>
-            </div>
-            <span className="truncate">Cloud Sync Aktif</span>
-          </div>
         </div>
 
       </aside>
