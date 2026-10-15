@@ -5,7 +5,7 @@ import {
   ArrowRight, ArrowUpRight, Clock, Calendar, FileText, X, Plus, 
   KanbanSquare, GraduationCap, ChevronDown, ChevronUp, Sparkles, RefreshCw,
   SlidersHorizontal, Trash2, RotateCcw, Check, Trophy, Flame, Crown, Medal, CheckSquare,
-  AlertTriangle, BarChart3
+  AlertTriangle, BarChart3, Megaphone, Pin, Edit3, AlertCircle, Info
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { useState, useEffect } from "react";
@@ -15,6 +15,32 @@ interface DashboardContentProps {
   setActiveTab?: (tab: string) => void;
   onOpenGuide?: () => void;
 }
+
+interface Announcement {
+  id: string;
+  title: string;
+  category: "penting" | "info" | "catatan";
+  author: string;
+  authorRole: string;
+  date: string;
+  content: string;
+  bullets: string[];
+}
+
+const DEFAULT_ANNOUNCEMENT: Announcement = {
+  id: "ann_default",
+  title: "Pengingat Tenggat Naskah & Standar Mutu Dakwah",
+  category: "penting",
+  author: "Nu'man",
+  authorRole: "Admin / Tim Inti",
+  date: "Oktober 2026",
+  content: "Dihimbau kepada seluruh asatidz dan tim media madrasah untuk memperhatikan arahan kerja berikut:",
+  bullets: [
+    "Seluruh naskah konten reel dakwah wajib ditinjau akurasi tajwid dan referensi dalil sebelum disetor.",
+    "Progres tugas dan checklist mingguan wajib diperbarui paling lambat hari Kamis pukul 20.00 WIB.",
+    "Buku panduan kurikulum dan SOP halaqah terbaru dapat diakses melalui menu Catatan & SOP."
+  ]
+};
 
 const DEFAULT_HADITH_QUOTES = [
   {
@@ -100,6 +126,72 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
       console.error(e);
     }
   }, []);
+
+  // Admin Announcement / Important Notice State
+  const [announcement, setAnnouncement] = useState<Announcement>(DEFAULT_ANNOUNCEMENT);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [editAnnTitle, setEditAnnTitle] = useState("");
+  const [editAnnContent, setEditAnnContent] = useState("");
+  const [editAnnBullets, setEditAnnBullets] = useState("");
+  const [editAnnCategory, setEditAnnCategory] = useState<"penting" | "info" | "catatan">("penting");
+
+  useEffect(() => {
+    try {
+      const savedAnn = localStorage.getItem("mqd_admin_announcement");
+      if (savedAnn) {
+        const parsed = JSON.parse(savedAnn);
+        if (parsed && parsed.title) {
+          setAnnouncement(parsed);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleOpenEditAnnouncement = () => {
+    setEditAnnTitle(announcement.title);
+    setEditAnnContent(announcement.content);
+    setEditAnnBullets(announcement.bullets ? announcement.bullets.join("\n") : "");
+    setEditAnnCategory(announcement.category);
+    setShowAnnouncementModal(true);
+  };
+
+  const handleSaveAnnouncement = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editAnnTitle.trim()) return;
+    const bullets = editAnnBullets
+      .split("\n")
+      .map(b => b.trim())
+      .filter(b => b.length > 0);
+    const updated: Announcement = {
+      ...announcement,
+      title: editAnnTitle.trim(),
+      category: editAnnCategory,
+      content: editAnnContent.trim(),
+      bullets,
+      author: currentUser?.name || "Admin",
+      authorRole: currentUser?.roleLabel || "Admin / Tim Inti",
+      date: new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" })
+    };
+    setAnnouncement(updated);
+    try {
+      localStorage.setItem("mqd_admin_announcement", JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setShowAnnouncementModal(false);
+  };
+
+  const handleResetAnnouncement = () => {
+    setAnnouncement(DEFAULT_ANNOUNCEMENT);
+    try {
+      localStorage.removeItem("mqd_admin_announcement");
+    } catch (e) {
+      console.error(e);
+    }
+    setShowAnnouncementModal(false);
+  };
 
   // Real-time synchronization when profile avatar is updated
   const [avatarTick, setAvatarTick] = useState(0);
@@ -923,50 +1015,75 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             )}
           </div>
 
-          {/* SECTION: MUTIARA HIKMAH & HADITS DAKWAH (Islamic Elegance Accent) */}
-          <div className="bg-gradient-to-br from-emerald-950 via-[#064e3b] to-emerald-900 text-white rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
-            {/* Soft Islamic ambient glow */}
-            <div className="absolute -right-8 -bottom-8 w-36 h-36 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
-            
-            <div className="flex items-center justify-between mb-3 relative z-10">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300">
-                  Mutiara Hikmah • {activeHadith.theme}
-                </span>
+          {/* SECTION: PEMBERITAHUAN & ARAHAN PENTING ADMIN */}
+          <div className="bg-gradient-to-br from-amber-500/10 via-amber-50/40 to-white rounded-2xl border border-amber-200/90 shadow-xs p-4 sm:p-5 relative overflow-hidden space-y-3.5">
+            {/* Header Pengumuman */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-amber-200/60">
+              <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-xs shrink-0 mt-0.5 sm:mt-0">
+                  <Megaphone size={18} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-2xs">
+                      {announcement.category === "penting" ? "Pemberitahuan Penting" : announcement.category === "catatan" ? "Catatan Tim" : "Informasi Admin"}
+                    </span>
+                    <span className="text-xs text-slate-500 font-medium truncate">
+                      Oleh <strong className="text-slate-800">{announcement.author}</strong> ({announcement.authorRole})
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm sm:text-base mt-0.5 leading-snug">
+                    {announcement.title}
+                  </h4>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setHadithIndex((prev) => (prev + 1) % hadithList.length)}
-                  title="Ganti Hadits Berikutnya"
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <RefreshCw size={11} />
-                  <span>Ganti Quote</span>
-                </button>
-                <button
-                  onClick={() => setShowHadithModal(true)}
-                  title="Kelola Hadits & Target"
-                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
-                >
-                  <SlidersHorizontal size={12} />
-                </button>
-              </div>
+
+              {/* Action Button: Edit Pengumuman */}
+              <button
+                onClick={handleOpenEditAnnouncement}
+                className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-200 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+              >
+                <Edit3 size={13} className="text-amber-700" />
+                <span>Edit Catatan</span>
+              </button>
             </div>
 
-            <div className="space-y-2 relative z-10">
-              <p dir="rtl" className="font-arabic text-base sm:text-lg text-amber-100 font-bold leading-relaxed text-right">
-                {activeHadith.arabic}
-              </p>
-              <p className="text-xs sm:text-sm text-emerald-100/90 leading-snug italic font-normal">
-                "{activeHadith.translation}"
-              </p>
-              <div className="pt-1.5 flex items-center justify-between text-[10px] text-emerald-300/80 border-t border-emerald-800/50">
-                <span>{activeHadith.source}</span>
-                <span className="text-[9px] bg-emerald-800/70 px-2 py-0.5 rounded text-emerald-200">
-                  Kutipan {hadithIndex + 1} dari {hadithList.length}
-                </span>
-              </div>
+            {/* Isi Pengumuman & Poin-poin */}
+            <div className="space-y-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed">
+              {announcement.content && (
+                <p className="font-medium text-slate-800">
+                  {announcement.content}
+                </p>
+              )}
+
+              {announcement.bullets && announcement.bullets.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  {announcement.bullets.map((bullet, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-start gap-2.5 bg-white/90 p-2.5 sm:p-3 rounded-xl border border-amber-100 shadow-2xs hover:border-amber-200 transition-colors"
+                    >
+                      <span className="w-5 h-5 rounded-lg bg-amber-100 text-amber-800 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <span className="text-slate-700 text-xs sm:text-[13px] leading-snug font-normal">
+                        {bullet}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Pin status */}
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-amber-100/70">
+              <span className="flex items-center gap-1.5 text-slate-500 font-medium">
+                <Pin size={12} className="text-amber-500" />
+                <span>Disematkan untuk seluruh tim & asatidz</span>
+              </span>
+              <span className="text-amber-800 font-semibold bg-amber-100/80 px-2 py-0.5 rounded text-[10px]">
+                Periode {announcement.date}
+              </span>
             </div>
           </div>
 
@@ -1026,55 +1143,6 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                   <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${lowPercent}%` }}></div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* 2. Pintas Ruang Kerja (Quick Action Cards) */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Pintas Ruang Kerja</h4>
-                <p className="text-[11px] text-slate-400">Akses cepat ke alur kerja utama</p>
-              </div>
-              <span className="text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100 px-2 py-0.5 rounded-full">
-                Pintas Cepat
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Pintas 1: Papan Kanban */}
-              <button
-                onClick={() => setActiveTab?.('board')}
-                className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-blue-200 hover:shadow-xs transition-all text-left group cursor-pointer flex flex-col justify-between h-20"
-              >
-                <div className="flex items-center justify-between w-full">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <KanbanSquare size={14} />
-                  </div>
-                  <ChevronRight size={13} className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Papan Kanban</p>
-                  <p className="text-[10px] text-slate-400 truncate">Kelola alur kerja</p>
-                </div>
-              </button>
-
-              {/* Pintas 2: Materi Konten */}
-              <button
-                onClick={() => setActiveTab?.('contents')}
-                className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-purple-200 hover:shadow-xs transition-all text-left group cursor-pointer flex flex-col justify-between h-20"
-              >
-                <div className="flex items-center justify-between w-full">
-                  <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Sparkles size={14} />
-                  </div>
-                  <ChevronRight size={13} className="text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-800 group-hover:text-purple-600 transition-colors">Materi Konten</p>
-                  <p className="text-[10px] text-slate-400 truncate">Daftar naskah</p>
-                </div>
-              </button>
             </div>
           </div>
 
@@ -1493,6 +1561,155 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                 Selesai
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Admin Announcement Modal */}
+      {showAnnouncementModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="absolute inset-0" onClick={() => setShowAnnouncementModal(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 z-10 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50/60 to-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                  <Megaphone size={18} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base leading-tight">
+                    Kelola Pengumuman & Arahan Admin
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Pesan yang disematkan di beranda untuk seluruh tim
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAnnouncementModal(false)} 
+                className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveAnnouncement} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+              {/* Kategori / Tipe */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  Tipe Pemberitahuan
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditAnnCategory("penting")}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
+                      editAnnCategory === "penting" 
+                        ? "bg-amber-500 text-white border-amber-600 shadow-xs" 
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    🔴 Penting
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditAnnCategory("info")}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
+                      editAnnCategory === "info" 
+                        ? "bg-blue-600 text-white border-blue-700 shadow-xs" 
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    ℹ️ Info Tim
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditAnnCategory("catatan")}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
+                      editAnnCategory === "catatan" 
+                        ? "bg-emerald-600 text-white border-emerald-700 shadow-xs" 
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    📌 Catatan SOP
+                  </button>
+                </div>
+              </div>
+
+              {/* Judul Pengumuman */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  Judul Arahan / Pemberitahuan
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editAnnTitle}
+                  onChange={(e) => setEditAnnTitle(e.target.value)}
+                  placeholder="Contoh: Pengingat Tenggat Naskah & Jadwal Halaqah"
+                  className="w-full text-xs font-semibold p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                />
+              </div>
+
+              {/* Pengantar / Ringkasan Singkat */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  Kalimat Pengantar / Keterangan
+                </label>
+                <textarea
+                  rows={2}
+                  value={editAnnContent}
+                  onChange={(e) => setEditAnnContent(e.target.value)}
+                  placeholder="Contoh: Dihimbau kepada seluruh tim untuk memperhatikan poin berikut:"
+                  className="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                />
+              </div>
+
+              {/* Poin-poin Instruksi */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  Poin-Poin Instruksi / Catatan (1 baris per poin)
+                </label>
+                <textarea
+                  rows={4}
+                  value={editAnnBullets}
+                  onChange={(e) => setEditAnnBullets(e.target.value)}
+                  placeholder="Baris 1: Poin instruksi pertama&#10;Baris 2: Poin instruksi kedua&#10;Baris 3: Poin instruksi ketiga"
+                  className="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 leading-relaxed font-mono"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Tips: Tekan Enter untuk menambah poin baru. Setiap baris akan otomatis diberi nomor urut di dashboard.
+                </p>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={handleResetAnnouncement}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                >
+                  <RotateCcw size={12} />
+                  <span>Reset Bawaan</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAnnouncementModal(false)}
+                    className="text-xs font-semibold px-3.5 py-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="text-xs font-bold px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-colors cursor-pointer"
+                  >
+                    Simpan Pengumuman
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
