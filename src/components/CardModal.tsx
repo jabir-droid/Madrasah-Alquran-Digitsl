@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Lock } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 
 interface CardModalProps {
@@ -10,6 +10,8 @@ interface CardModalProps {
 
 export default function CardModal({ card, defaultColumnId, onClose }: CardModalProps) {
   const { data, saveCard, removeCard, currentUser } = useAppContext();
+  const isAdmin = currentUser.role === "admin";
+  const isNewCard = !card || !card.id || !card.title;
   
   const [formData, setFormData] = useState<any>({
     id: card?.id || "card_" + Date.now(),
@@ -61,6 +63,10 @@ export default function CardModal({ card, defaultColumnId, onClose }: CardModalP
   };
 
   const handleSave = () => {
+    if (isNewCard && !isAdmin) {
+      alert("Hanya Admin yang memiliki wewenang untuk membuat tugas baru.");
+      return;
+    }
     if (!formData.title.trim()) {
       alert("Judul tidak boleh kosong");
       return;
@@ -84,6 +90,14 @@ export default function CardModal({ card, defaultColumnId, onClose }: CardModalP
         </div>
 
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
+          {isNewCard && !isAdmin && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+              <Lock size={15} className="text-amber-600 shrink-0" />
+              <span>
+                <strong>Mode Terbatas:</strong> Hanya <strong>Admin / Tim Inti</strong> yang berwenang membuat tugas baru.
+              </span>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5">Judul *</label>
             <input 
@@ -218,8 +232,14 @@ export default function CardModal({ card, defaultColumnId, onClose }: CardModalP
               </span>
             )}
           <div className="flex items-center gap-3">
-            <button onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Batal</button>
-            <button onClick={handleSave} className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">Simpan</button>
+            <button onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
+              {isNewCard && !isAdmin ? "Tutup" : "Batal"}
+            </button>
+            {(!isNewCard || isAdmin) && (
+              <button onClick={handleSave} className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors cursor-pointer">
+                Simpan
+              </button>
+            )}
           </div>
         </div>
 

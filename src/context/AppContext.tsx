@@ -838,6 +838,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addCard = (title: string, columnId: string) => {
+    if (currentUser.role !== "admin") {
+      alert("Hanya Admin yang memiliki wewenang untuk membuat tugas baru.");
+      return;
+    }
     const newCard: any = {
       id: "card_" + Date.now(),
       title,
@@ -927,6 +931,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (index >= 0) {
       newCards[index] = card;
     } else {
+      if (currentUser.role !== "admin") {
+        alert("Hanya Admin yang memiliki wewenang untuk membuat tugas baru.");
+        return;
+      }
       newCards.push(card);
     }
     saveData({ ...data, cards: newCards });

@@ -1,4 +1,4 @@
-import { MoreHorizontal, Calendar, CheckSquare, Plus, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, Archive, Check, FileText, Flame, Sparkles, ArrowRight } from "lucide-react";
+import { MoreHorizontal, Calendar, CheckSquare, Plus, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, Archive, Check, FileText, Flame, Sparkles, ArrowRight, Lock, ShieldCheck } from "lucide-react";
 import db from "@/data/db.json";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useAppContext } from "@/context/AppContext";
@@ -17,7 +17,8 @@ import {
 } from "@/utils/calendar";
 
 export default function BoardContent() {
-  const { data, moveCard, toggleChecklist, addCard } = useAppContext();
+  const { data, moveCard, toggleChecklist, addCard, currentUser } = useAppContext();
+  const isAdmin = currentUser.role === "admin";
   const [view, setView] = useState("board");
   const [editingCard, setEditingCard] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -167,6 +168,22 @@ export default function BoardContent() {
 
   return (
     <div className={`flex flex-col p-4 sm:p-5 lg:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${view === 'kalender' ? 'min-h-full pb-24' : 'h-full overflow-x-hidden'}`}>
+      
+      {/* Role Notice Banner: Pembuatan Tugas Hanya Untuk Admin */}
+      {!isAdmin && (
+        <div className="mb-3.5 p-2.5 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-2xs shrink-0">
+          <div className="flex items-center gap-2">
+            <Lock size={15} className="text-slate-500 shrink-0" />
+            <span>
+              <strong>Mode {currentUser.role === 'kreatif' ? 'Tim Kreatif' : 'Guru'} (Anggota):</strong> Anda dapat melihat tugas, mencentang sub-tugas (checklist), dan melaporkan progres. Pembuatan tugas baru dikelola oleh <strong>Admin / Tim Inti</strong>.
+            </span>
+          </div>
+          <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-slate-200 text-slate-700 shrink-0">
+            {currentUser.roleLabel}: {currentUser.name}
+          </span>
+        </div>
+      )}
+
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 mb-5">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center bg-slate-100 p-1 rounded-lg">
@@ -398,13 +415,15 @@ export default function BoardContent() {
                       );
                     })}
                       {provided.placeholder}
-                      <button onClick={() => {
-                        setDefaultColumnId(col.id);
-                        setEditingCard(null);
-                        setIsModalOpen(true);
-                      }} className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-xl transition-colors border border-transparent hover:border-slate-200 border-dashed mt-2">
-                        <Plus size={16} /> Tambah kartu
-                      </button>
+                      {isAdmin && (
+                        <button onClick={() => {
+                          setDefaultColumnId(col.id);
+                          setEditingCard(null);
+                          setIsModalOpen(true);
+                        }} className="w-full py-2.5 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-xl transition-colors border border-transparent hover:border-slate-200 border-dashed mt-2 cursor-pointer">
+                          <Plus size={15} /> Tambah kartu
+                        </button>
+                      )}
                     </div>
                   )}
                 </Droppable>
@@ -801,40 +820,49 @@ export default function BoardContent() {
                   ) : (
                     <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60 text-center space-y-2">
                       <p className="text-xs text-slate-500">Tidak ada tenggat tugas di tanggal ini.</p>
-                      <button
-                        onClick={() => {
-                          setEditingCard({
-                            title: "",
-                            dueDate: selectedDateStr,
-                            priority: "normal",
-                            checklist: [],
-                            columnId: "c_0"
-                          });
-                          setIsModalOpen(true);
-                        }}
-                        className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 px-3 py-1.5 rounded-xl transition-colors inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Plus size={14} /> Tambah Tugas di Tanggal Ini
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            setEditingCard({
+                              title: "",
+                              dueDate: selectedDateStr,
+                              priority: "normal",
+                              checklist: [],
+                              columnId: "c_0"
+                            });
+                            setIsModalOpen(true);
+                          }}
+                          className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 px-3 py-1.5 rounded-xl transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus size={14} /> Tambah Tugas di Tanggal Ini
+                        </button>
+                      )}
                     </div>
                   )}
 
-                  {/* Quick Action Button */}
-                  <button
-                    onClick={() => {
-                      setEditingCard({
-                        title: "",
-                        dueDate: selectedDateStr,
-                        priority: "normal",
-                        checklist: [],
-                        columnId: "c_0"
-                      });
-                      setIsModalOpen(true);
-                    }}
-                    className="w-full py-2.5 px-4 bg-[#064e3b] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
-                  >
-                    <Plus size={15} /> Buat Tugas Baru
-                  </button>
+                  {/* Quick Action Button: Hanya Admin */}
+                  {isAdmin ? (
+                    <button
+                      onClick={() => {
+                        setEditingCard({
+                          title: "",
+                          dueDate: selectedDateStr,
+                          priority: "normal",
+                          checklist: [],
+                          columnId: "c_0"
+                        });
+                        setIsModalOpen(true);
+                      }}
+                      className="w-full py-2.5 px-4 bg-[#064e3b] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+                    >
+                      <Plus size={15} /> Buat Tugas Baru
+                    </button>
+                  ) : (
+                    <div className="w-full py-2 px-3 bg-slate-100 border border-slate-200 text-slate-500 text-[11px] font-semibold rounded-xl text-center flex items-center justify-center gap-1.5">
+                      <Lock size={12} className="text-slate-400 shrink-0" />
+                      <span>Pembuatan tugas baru dikelola oleh Admin</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. Monthly Summary Card */}
