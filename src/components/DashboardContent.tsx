@@ -1041,35 +1041,18 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
           </div>
 
           {/* SECTION: PEMBERITAHUAN & ARAHAN PENTING ADMIN */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 sm:p-5 relative overflow-hidden space-y-4 hover:border-emerald-200/90 transition-all group">
-            {/* Top decorative gradient accent */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500" />
-
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6 relative overflow-hidden space-y-4 hover:border-emerald-200/90 transition-all">
             {/* Header Pengumuman */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
-              <div className="flex items-start sm:items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                  <Megaphone size={19} className="stroke-[2.2]" />
+              <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+                  <Megaphone size={22} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full border shadow-2xs flex items-center gap-1.5 ${
-                      announcement.category === "penting" 
-                        ? "bg-rose-50 text-rose-700 border-rose-200/80" 
-                        : announcement.category === "catatan" 
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200/80" 
-                        : "bg-blue-50 text-blue-700 border-blue-200/80"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        announcement.category === "penting" ? "bg-rose-500 animate-ping" : "bg-emerald-500"
-                      }`} />
-                      {announcement.category === "penting" ? "Pemberitahuan Penting" : announcement.category === "catatan" ? "Catatan SOP" : "Informasi Tim"}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium truncate">
-                      Oleh <strong className="text-slate-700 font-semibold">{announcement.author}</strong> ({announcement.authorRole})
-                    </span>
-                  </div>
-                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base mt-1 leading-snug tracking-tight">
+                  <p className="text-xs text-slate-500 font-medium">
+                    Oleh <strong className="text-slate-900 font-bold">{announcement.author}</strong> ({announcement.authorRole})
+                  </p>
+                  <h4 className="font-extrabold text-slate-900 text-base sm:text-lg mt-0.5 leading-snug tracking-tight">
                     {announcement.title}
                   </h4>
                 </div>
@@ -1080,13 +1063,13 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                 <button
                   onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
                   title={isAdminVerified ? "Edit Catatan Pengumuman" : "Verifikasi PIN Admin untuk Mengedit"}
-                  className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+                  className="self-start sm:self-center flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
                 >
-                  <Edit3 size={13} className="text-emerald-600" />
+                  <Edit3 size={14} className="text-emerald-600" />
                   <span>Edit Catatan</span>
                 </button>
               ) : (
-                <div className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shrink-0 shadow-2xs">
+                <div className="self-start sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shrink-0 shadow-2xs">
                   <Shield size={12} className="text-emerald-600" />
                   <span>Arahan Resmi</span>
                 </div>
@@ -1094,24 +1077,24 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             </div>
 
             {/* Isi Pengumuman & Poin-poin */}
-            <div className="space-y-2.5 text-xs sm:text-sm leading-relaxed">
+            <div className="space-y-3">
               {announcement.content && (
-                <p className="font-normal text-slate-600 leading-relaxed">
+                <p className="font-semibold text-slate-800 text-xs sm:text-sm leading-relaxed">
                   {announcement.content}
                 </p>
               )}
 
               {announcement.bullets && announcement.bullets.length > 0 && (
-                <div className="space-y-2 pt-1">
+                <div className="space-y-2.5 pt-0.5">
                   {announcement.bullets.map((bullet, idx) => (
                     <div 
                       key={idx} 
-                      className="flex items-start gap-3 bg-slate-50/70 hover:bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-all shadow-2xs"
+                      className="flex items-start gap-3.5 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 hover:border-emerald-200/90 transition-all shadow-2xs"
                     >
-                      <span className="w-5 h-5 rounded-lg bg-emerald-100/90 text-emerald-800 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {idx + 1}
                       </span>
-                      <span className="text-slate-700 text-xs sm:text-[13px] leading-relaxed font-normal">
+                      <span className="text-slate-700 text-xs sm:text-sm leading-relaxed font-normal pt-0.5">
                         {bullet}
                       </span>
                     </div>
@@ -1121,13 +1104,13 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             </div>
 
             {/* Footer Pin status */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2.5 border-t border-slate-100">
-              <span className="flex items-center gap-1.5 text-slate-400 font-medium">
-                <Pin size={12} className="text-emerald-600" />
-                <span>Disematkan untuk seluruh tim madrasah</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs pt-3 border-t border-slate-100">
+              <span className="flex items-center gap-2 text-slate-500 font-medium">
+                <Pin size={14} className="text-emerald-600 shrink-0" />
+                <span>Disematkan untuk seluruh Tim Madrasah Al-Qur'an Digital</span>
               </span>
-              <span className="text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded text-[10px]">
-                {announcement.date}
+              <span className="self-start sm:self-center text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 rounded-lg text-[11px] shadow-2xs">
+                {announcement.date.startsWith("Periode") ? announcement.date : `Periode ${announcement.date}`}
               </span>
             </div>
           </div>
