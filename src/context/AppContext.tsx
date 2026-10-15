@@ -277,10 +277,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("mqd_user_profile_u_faruq");
       localStorage.removeItem("mqd_pin_u_faruq");
 
-      // 2. Client is Nu'man - Admin verified ALWAYS defaults to true
-      localStorage.setItem("mqd_admin_verified", "true");
-      setIsAdminVerified(true);
-
       const savedUser = localStorage.getItem("mqd_current_user");
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
@@ -291,6 +287,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(u);
             if (u.role === "admin") {
               setIsAdminVerified(true);
+              localStorage.setItem("mqd_admin_verified", "true");
+            } else {
+              setIsAdminVerified(false);
+              localStorage.removeItem("mqd_admin_verified");
             }
             return;
           }
@@ -302,6 +302,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const u = memberToCurrentUser(numanMember);
       setCurrentUser(u);
       setIsAdminVerified(true);
+      localStorage.setItem("mqd_admin_verified", "true");
       localStorage.setItem("mqd_current_user", JSON.stringify(u));
     } catch (e) {
       console.error(e);

@@ -149,8 +149,14 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
     }
   }, []);
 
+  // Check whether the current user has the Admin role
+  const isCurrentUserAdmin = 
+    currentUser?.role === "admin" || 
+    (currentUser?.roleLabel || "").toLowerCase().includes("admin") || 
+    (currentUser?.roleLabel || "").toLowerCase().includes("inti");
+
   const handleAdminAction = (callback: () => void) => {
-    if (isAdminVerified) {
+    if (isCurrentUserAdmin && isAdminVerified) {
       callback();
     } else {
       openAdminModal(callback);
@@ -158,6 +164,10 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
   };
 
   const handleOpenEditAnnouncement = () => {
+    if (!isCurrentUserAdmin && !isAdminVerified) {
+      openAdminModal(handleOpenEditAnnouncement);
+      return;
+    }
     setEditAnnTitle(announcement.title);
     setEditAnnContent(announcement.content);
     setEditAnnBullets(announcement.bullets ? announcement.bullets.join("\n") : "");
@@ -167,6 +177,10 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
 
   const handleSaveAnnouncement = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isCurrentUserAdmin && !isAdminVerified) {
+      setShowAnnouncementModal(false);
+      return;
+    }
     if (!editAnnTitle.trim()) return;
     const bullets = editAnnBullets
       .split("\n")
@@ -718,15 +732,17 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             <span>{MONTH_NAMES[calMonth]} {calYear}</span>
           </div>
 
-          <button
-            onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
-            title="Kelola Arahan & Target (Hanya Admin)"
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-amber-50/80 border border-slate-200/80 hover:border-amber-200 text-xs font-semibold text-slate-700 hover:text-amber-900 flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Shield size={13} className={isAdminVerified ? "text-emerald-600" : "text-amber-500"} />
-            <span className="hidden sm:inline">Arahan Admin</span>
-            {!isAdminVerified && <Lock size={10} className="text-slate-400" />}
-          </button>
+          {isCurrentUserAdmin && (
+            <button
+              onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
+              title="Kelola Arahan & Target (Hanya Admin)"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-amber-50/80 border border-slate-200/80 hover:border-amber-200 text-xs font-semibold text-slate-700 hover:text-amber-900 flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Shield size={13} className={isAdminVerified ? "text-emerald-600" : "text-amber-500"} />
+              <span className="hidden sm:inline">Arahan Admin</span>
+              {!isAdminVerified && <Lock size={10} className="text-slate-400" />}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1048,18 +1064,21 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
               </div>
 
               {/* Action Button: Edit Pengumuman (Hanya Admin) */}
-              <button
-                onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
-                title={isAdminVerified ? "Edit Catatan Pengumuman" : "Verifikasi PIN Admin untuk Mengedit"}
-                className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-200 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
-              >
-                {isAdminVerified ? (
+              {isCurrentUserAdmin ? (
+                <button
+                  onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
+                  title={isAdminVerified ? "Edit Catatan Pengumuman" : "Verifikasi PIN Admin untuk Mengedit"}
+                  className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-200 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+                >
                   <Edit3 size={13} className="text-amber-700" />
-                ) : (
-                  <Lock size={12} className="text-amber-600" />
-                )}
-                <span>Edit Catatan</span>
-              </button>
+                  <span>Edit Catatan</span>
+                </button>
+              ) : (
+                <div className="self-end sm:self-center flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100/70 border border-amber-200/80 text-amber-900 text-[11px] font-bold shrink-0 shadow-2xs">
+                  <Shield size={12} className="text-amber-600" />
+                  <span>Arahan Resmi</span>
+                </div>
+              )}
             </div>
 
             {/* Isi Pengumuman & Poin-poin */}
