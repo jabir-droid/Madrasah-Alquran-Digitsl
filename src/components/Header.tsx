@@ -253,41 +253,6 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
           <span>{syncStatus === "syncing" ? "Menyinkronkan..." : syncStatus === "error" ? "Offline" : "Sinkron Cloud"}</span>
         </button>
 
-        <button 
-          onClick={onOpenGuide}
-          title="Panduan Ruang Kerja"
-          className="p-2 text-slate-500 hover:bg-slate-200/60 hover:text-slate-800 rounded-xl transition-colors cursor-pointer"
-        >
-          <HelpCircle size={18} />
-        </button>
-
-        <button 
-          onClick={() => setActiveTab?.('notifications')}
-          title={unreadNotifCount > 0 ? `${unreadNotifCount} pemberitahuan belum dibaca` : "Pemberitahuan & Notifikasi (Semua terbaca)"}
-          className={`p-2 rounded-xl transition-colors relative cursor-pointer ${
-            activeTab === 'notifications' 
-              ? 'bg-emerald-100 text-emerald-800' 
-              : 'text-slate-500 hover:bg-slate-200/60 hover:text-slate-800'
-          }`}
-        >
-          <Bell size={18} />
-          {unreadNotifCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-rose-500 absolute top-1.5 right-1.5 ring-2 ring-[#f8fafc]"></span>
-          )}
-        </button>
-
-        <button 
-          onClick={() => setActiveTab?.('settings')}
-          title="Pengaturan Sistem"
-          className={`p-2 rounded-xl transition-colors cursor-pointer ${
-            activeTab === 'settings' 
-              ? 'bg-emerald-100 text-emerald-800' 
-              : 'text-slate-500 hover:bg-slate-200/60 hover:text-slate-800'
-          }`}
-        >
-          <Settings size={18} />
-        </button>
-
         {/* User Profile Pill Button with Role Switcher Dropdown */}
         <div className="relative" ref={menuRef}>
           <button 
