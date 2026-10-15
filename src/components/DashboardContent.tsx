@@ -1041,65 +1041,77 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
           </div>
 
           {/* SECTION: PEMBERITAHUAN & ARAHAN PENTING ADMIN */}
-          <div className="bg-gradient-to-br from-amber-500/10 via-amber-50/40 to-white rounded-2xl border border-amber-200/90 shadow-xs p-4 sm:p-5 relative overflow-hidden space-y-3.5">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-4 sm:p-5 relative overflow-hidden space-y-4 hover:border-emerald-200/90 transition-all group">
+            {/* Top decorative gradient accent */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500" />
+
             {/* Header Pengumuman */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-amber-200/60">
-              <div className="flex items-start sm:items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-xs shrink-0 mt-0.5 sm:mt-0">
-                  <Megaphone size={18} />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
+              <div className="flex items-start sm:items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+                  <Megaphone size={19} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-2xs">
-                      {announcement.category === "penting" ? "Pemberitahuan Penting" : announcement.category === "catatan" ? "Catatan Tim" : "Informasi Admin"}
+                    <span className={`text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full border shadow-2xs flex items-center gap-1.5 ${
+                      announcement.category === "penting" 
+                        ? "bg-rose-50 text-rose-700 border-rose-200/80" 
+                        : announcement.category === "catatan" 
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200/80" 
+                        : "bg-blue-50 text-blue-700 border-blue-200/80"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        announcement.category === "penting" ? "bg-rose-500 animate-ping" : "bg-emerald-500"
+                      }`} />
+                      {announcement.category === "penting" ? "Pemberitahuan Penting" : announcement.category === "catatan" ? "Catatan SOP" : "Informasi Tim"}
                     </span>
-                    <span className="text-xs text-slate-500 font-medium truncate">
-                      Oleh <strong className="text-slate-800">{announcement.author}</strong> ({announcement.authorRole})
+                    <span className="text-xs text-slate-400 font-medium truncate">
+                      Oleh <strong className="text-slate-700 font-semibold">{announcement.author}</strong> ({announcement.authorRole})
                     </span>
                   </div>
-                  <h4 className="font-bold text-slate-900 text-sm sm:text-base mt-0.5 leading-snug">
+                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base mt-1 leading-snug tracking-tight">
                     {announcement.title}
                   </h4>
                 </div>
               </div>
 
-              {/* Action Button: Edit Pengumuman (Hanya Admin) */}
+              {/* Action Button / Badge */}
               {isCurrentUserAdmin ? (
                 <button
                   onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
                   title={isAdminVerified ? "Edit Catatan Pengumuman" : "Verifikasi PIN Admin untuk Mengedit"}
-                  className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-200 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+                  className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200/80 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
                 >
-                  <Edit3 size={13} className="text-amber-700" />
+                  <Edit3 size={13} className="text-emerald-600" />
                   <span>Edit Catatan</span>
                 </button>
               ) : (
-                <div className="self-end sm:self-center flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100/70 border border-amber-200/80 text-amber-900 text-[11px] font-bold shrink-0 shadow-2xs">
-                  <Shield size={12} className="text-amber-600" />
+                <div className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shrink-0 shadow-2xs">
+                  <Shield size={12} className="text-emerald-600" />
                   <span>Arahan Resmi</span>
                 </div>
               )}
             </div>
 
             {/* Isi Pengumuman & Poin-poin */}
-            <div className="space-y-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed">
+            <div className="space-y-2.5 text-xs sm:text-sm leading-relaxed">
               {announcement.content && (
-                <p className="font-medium text-slate-800">
+                <p className="font-normal text-slate-600 leading-relaxed">
                   {announcement.content}
                 </p>
               )}
 
               {announcement.bullets && announcement.bullets.length > 0 && (
-                <div className="space-y-1.5 pt-1">
+                <div className="space-y-2 pt-1">
                   {announcement.bullets.map((bullet, idx) => (
                     <div 
                       key={idx} 
-                      className="flex items-start gap-2.5 bg-white/90 p-2.5 sm:p-3 rounded-xl border border-amber-100 shadow-2xs hover:border-amber-200 transition-colors"
+                      className="flex items-start gap-3 bg-slate-50/70 hover:bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-all shadow-2xs"
                     >
-                      <span className="w-5 h-5 rounded-lg bg-amber-100 text-amber-800 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-lg bg-emerald-100/90 text-emerald-800 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {idx + 1}
                       </span>
-                      <span className="text-slate-700 text-xs sm:text-[13px] leading-snug font-normal">
+                      <span className="text-slate-700 text-xs sm:text-[13px] leading-relaxed font-normal">
                         {bullet}
                       </span>
                     </div>
@@ -1109,13 +1121,13 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
             </div>
 
             {/* Footer Pin status */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-amber-100/70">
-              <span className="flex items-center gap-1.5 text-slate-500 font-medium">
-                <Pin size={12} className="text-amber-500" />
-                <span>Disematkan untuk seluruh tim & asatidz</span>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2.5 border-t border-slate-100">
+              <span className="flex items-center gap-1.5 text-slate-400 font-medium">
+                <Pin size={12} className="text-emerald-600" />
+                <span>Disematkan untuk seluruh tim madrasah</span>
               </span>
-              <span className="text-amber-800 font-semibold bg-amber-100/80 px-2 py-0.5 rounded text-[10px]">
-                Periode {announcement.date}
+              <span className="text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded text-[10px]">
+                {announcement.date}
               </span>
             </div>
           </div>
@@ -1601,60 +1613,75 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
       {showAnnouncementModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setShowAnnouncementModal(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-3xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 z-10 flex flex-col max-h-[90vh]">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 z-10 flex flex-col max-h-[90vh]">
+            {/* Top Decorative Header Accent */}
+            <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 shrink-0" />
+
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50/60 to-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
-                  <Megaphone size={18} />
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-start justify-between bg-white relative">
+              <div className="flex items-start gap-3.5 min-w-0 pr-6">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                  <Megaphone size={22} className="stroke-[2.2]" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-extrabold text-slate-900 text-base leading-tight">
-                      Kelola Arahan & Target Tim
-                    </h3>
-                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                      <Shield size={10} /> Khusus Admin
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 inline-flex items-center gap-1 shadow-2xs">
+                      <Shield size={10} className="stroke-[2.5]" /> Khusus Admin
                     </span>
+                    <span className="text-[10px] font-semibold text-slate-400">Pemberitahuan Beranda</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Pesan yang disematkan di beranda untuk seluruh tim
+                  <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl mt-1 leading-snug tracking-tight">
+                    Kelola Arahan & Target Tim
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Pesan dan arahan yang disematkan di beranda untuk seluruh tim madrasah
                   </p>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setShowAnnouncementModal(false)} 
-                className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer shrink-0"
+                title="Tutup"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveAnnouncement} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+            <form onSubmit={handleSaveAnnouncement} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4.5 custom-scrollbar">
               {/* Bagian Target Mingguan */}
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
-                <div>
-                  <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <BookOpen size={13} className="text-amber-600" /> Target Rilis Konten Pekan Ini
-                  </h5>
-                  <p className="text-[11px] text-slate-500">Target konten dakwah yang dipublikasikan setiap pekan</p>
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/30 border border-slate-200/80 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
+                    <BookOpen size={18} className="stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="text-xs font-bold text-slate-800 leading-tight">
+                      Target Rilis Konten Pekan Ini
+                    </h5>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Jumlah konten dakwah yang ditargetkan rilis tiap pekan
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0 bg-white p-1 rounded-xl border border-slate-200/90 shadow-2xs">
                   <button
                     type="button"
                     onClick={() => handleSaveTarget(Math.max(1, targetWeek - 1))}
-                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-amber-100 font-bold flex items-center justify-center transition-all cursor-pointer text-xs shadow-2xs"
+                    className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 font-bold flex items-center justify-center transition-all cursor-pointer text-sm"
+                    title="Kurangi target"
                   >
                     -
                   </button>
-                  <span className="w-10 text-center font-bold text-slate-800 text-xs py-1 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                  <span className="w-10 text-center font-extrabold text-slate-900 text-sm">
                     {targetWeek}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleSaveTarget(targetWeek + 1)}
-                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-amber-100 font-bold flex items-center justify-center transition-all cursor-pointer text-xs shadow-2xs"
+                    className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 font-bold flex items-center justify-center transition-all cursor-pointer text-sm"
+                    title="Tambah target"
                   >
                     +
                   </button>
@@ -1663,49 +1690,52 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
 
               {/* Kategori / Tipe */}
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-2">
                   Tipe Pemberitahuan
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                   <button
                     type="button"
                     onClick={() => setEditAnnCategory("penting")}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
                       editAnnCategory === "penting" 
-                        ? "bg-amber-500 text-white border-amber-600 shadow-xs" 
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        ? "bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-500/20 shadow-xs" 
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                     }`}
                   >
-                    🔴 Penting
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    <span>Penting</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditAnnCategory("info")}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
                       editAnnCategory === "info" 
-                        ? "bg-blue-600 text-white border-blue-700 shadow-xs" 
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        ? "bg-blue-50 text-blue-700 border-blue-300 ring-2 ring-blue-500/20 shadow-xs" 
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                     }`}
                   >
-                    ℹ️ Info Tim
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span>Info Tim</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditAnnCategory("catatan")}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 ${
                       editAnnCategory === "catatan" 
-                        ? "bg-emerald-600 text-white border-emerald-700 shadow-xs" 
-                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs" 
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                     }`}
                   >
-                    📌 Catatan SOP
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Catatan SOP</span>
                   </button>
                 </div>
               </div>
 
               {/* Judul Pengumuman */}
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1.5">
                   Judul Arahan / Pemberitahuan
                 </label>
                 <input
@@ -1713,50 +1743,54 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                   required
                   value={editAnnTitle}
                   onChange={(e) => setEditAnnTitle(e.target.value)}
-                  placeholder="Contoh: Pengingat Tenggat Naskah & Jadwal Halaqah"
-                  className="w-full text-xs font-semibold p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                  placeholder="Contoh: Pengingat Tenggat Naskah & Standar Mutu Dakwah"
+                  className="w-full text-xs sm:text-sm font-semibold p-3 rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 placeholder:font-normal"
                 />
               </div>
 
               {/* Pengantar / Ringkasan Singkat */}
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                  Kalimat Pengantar / Keterangan
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1.5">
+                  Kalimat Pengantar / Keterangan Singkat
                 </label>
                 <textarea
                   rows={2}
                   value={editAnnContent}
                   onChange={(e) => setEditAnnContent(e.target.value)}
-                  placeholder="Contoh: Dihimbau kepada seluruh tim untuk memperhatikan poin berikut:"
-                  className="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                  placeholder="Contoh: Dihimbau kepada seluruh tim media dan asatidz untuk memperhatikan arahan kerja berikut:"
+                  className="w-full text-xs sm:text-sm font-normal p-3 rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 leading-relaxed resize-none"
                 />
               </div>
 
               {/* Poin-poin Instruksi */}
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                  Poin-Poin Instruksi / Catatan (1 baris per poin)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Poin-Poin Instruksi / Catatan
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-medium">1 baris per poin</span>
+                </div>
                 <textarea
                   rows={4}
                   value={editAnnBullets}
                   onChange={(e) => setEditAnnBullets(e.target.value)}
-                  placeholder="Baris 1: Poin instruksi pertama&#10;Baris 2: Poin instruksi kedua&#10;Baris 3: Poin instruksi ketiga"
-                  className="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 leading-relaxed font-mono"
+                  placeholder="Seluruh naskah konten reel dakwah wajib ditinjau akurasi tajwid dan referensi dalil sebelum disetor.&#10;Progres tugas dan checklist mingguan wajib diperbarui paling lambat hari Kamis pukul 20.00 WIB.&#10;Buku panduan kurikulum dan SOP halaqah terbaru dapat diakses di menu Panduan."
+                  className="w-full text-xs sm:text-sm font-normal p-3 rounded-xl bg-slate-50/80 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 leading-relaxed"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Tips: Tekan Enter untuk menambah poin baru. Setiap baris akan otomatis diberi nomor urut di dashboard.
+                <p className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0" />
+                  Tips: Tekan Enter untuk menambah poin baru. Setiap baris otomatis diberi nomor urut di kartu beranda.
                 </p>
               </div>
 
               {/* Modal Buttons */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={handleResetAnnouncement}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer px-2.5 py-1.5 rounded-xl hover:bg-rose-50"
                 >
-                  <RotateCcw size={12} />
+                  <RotateCcw size={13} />
                   <span>Reset Bawaan</span>
                 </button>
 
@@ -1764,15 +1798,16 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                   <button
                     type="button"
                     onClick={() => setShowAnnouncementModal(false)}
-                    className="text-xs font-semibold px-3.5 py-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="text-xs font-semibold px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="text-xs font-bold px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-colors cursor-pointer"
+                    className="text-xs font-bold px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all cursor-pointer flex items-center gap-1.5"
                   >
-                    Simpan Pengumuman
+                    <Check size={14} className="stroke-[2.5]" />
+                    <span>Simpan Arahan</span>
                   </button>
                 </div>
               </div>
