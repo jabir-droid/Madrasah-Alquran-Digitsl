@@ -5,7 +5,7 @@ import {
   ArrowRight, ArrowUpRight, Clock, Calendar, FileText, X, Plus, 
   KanbanSquare, GraduationCap, ChevronDown, ChevronUp, Sparkles, RefreshCw,
   SlidersHorizontal, Trash2, RotateCcw, Check, Trophy, Flame, Crown, Medal, CheckSquare,
-  AlertTriangle, BarChart3, Megaphone, Pin, Edit3, AlertCircle, Info
+  AlertTriangle, BarChart3, Megaphone, Pin, Edit3, AlertCircle, Info, Shield, Lock
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { useState, useEffect } from "react";
@@ -82,7 +82,7 @@ const DEFAULT_HADITH_QUOTES = [
 ];
 
 export default function DashboardContent({ setActiveTab, onOpenGuide }: DashboardContentProps) {
-  const { data, currentUser } = useAppContext();
+  const { data, currentUser, isAdminVerified, openAdminModal } = useAppContext();
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
   const [calYear, setCalYear] = useState(() => new Date().getFullYear());
   const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
@@ -148,6 +148,14 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
       console.error(e);
     }
   }, []);
+
+  const handleAdminAction = (callback: () => void) => {
+    if (isAdminVerified) {
+      callback();
+    } else {
+      openAdminModal(callback);
+    }
+  };
 
   const handleOpenEditAnnouncement = () => {
     setEditAnnTitle(announcement.title);
@@ -711,12 +719,13 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
           </div>
 
           <button
-            onClick={() => setShowHadithModal(true)}
-            title="Kelola Target & Mutiara Hadits"
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors cursor-pointer"
+            onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
+            title="Kelola Arahan & Target (Hanya Admin)"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-amber-50/80 border border-slate-200/80 hover:border-amber-200 text-xs font-semibold text-slate-700 hover:text-amber-900 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <SlidersHorizontal size={13} className="text-slate-500" />
-            <span className="hidden sm:inline">Target & Hadits</span>
+            <Shield size={13} className={isAdminVerified ? "text-emerald-600" : "text-amber-500"} />
+            <span className="hidden sm:inline">Arahan Admin</span>
+            {!isAdminVerified && <Lock size={10} className="text-slate-400" />}
           </button>
         </div>
       </div>
@@ -1038,12 +1047,17 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                 </div>
               </div>
 
-              {/* Action Button: Edit Pengumuman */}
+              {/* Action Button: Edit Pengumuman (Hanya Admin) */}
               <button
-                onClick={handleOpenEditAnnouncement}
+                onClick={() => handleAdminAction(handleOpenEditAnnouncement)}
+                title={isAdminVerified ? "Edit Catatan Pengumuman" : "Verifikasi PIN Admin untuk Mengedit"}
                 className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100/80 border border-amber-200 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
               >
-                <Edit3 size={13} className="text-amber-700" />
+                {isAdminVerified ? (
+                  <Edit3 size={13} className="text-amber-700" />
+                ) : (
+                  <Lock size={12} className="text-amber-600" />
+                )}
                 <span>Edit Catatan</span>
               </button>
             </div>
@@ -1576,10 +1590,15 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
                   <Megaphone size={18} />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-base leading-tight">
-                    Kelola Pengumuman & Arahan Admin
-                  </h3>
-                  <p className="text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-slate-900 text-base leading-tight">
+                      Kelola Arahan & Target Tim
+                    </h3>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <Shield size={10} /> Khusus Admin
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Pesan yang disematkan di beranda untuk seluruh tim
                   </p>
                 </div>
@@ -1594,6 +1613,35 @@ export default function DashboardContent({ setActiveTab, onOpenGuide }: Dashboar
 
             {/* Modal Form */}
             <form onSubmit={handleSaveAnnouncement} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+              {/* Bagian Target Mingguan */}
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
+                <div>
+                  <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <BookOpen size={13} className="text-amber-600" /> Target Rilis Konten Pekan Ini
+                  </h5>
+                  <p className="text-[11px] text-slate-500">Target konten dakwah yang dipublikasikan setiap pekan</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSaveTarget(Math.max(1, targetWeek - 1))}
+                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-amber-100 font-bold flex items-center justify-center transition-all cursor-pointer text-xs shadow-2xs"
+                  >
+                    -
+                  </button>
+                  <span className="w-10 text-center font-bold text-slate-800 text-xs py-1 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                    {targetWeek}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveTarget(targetWeek + 1)}
+                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-amber-100 font-bold flex items-center justify-center transition-all cursor-pointer text-xs shadow-2xs"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
               {/* Kategori / Tipe */}
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
