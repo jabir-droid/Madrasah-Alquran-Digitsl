@@ -121,12 +121,17 @@ export default function MembersContent() {
                         <>
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-bold text-slate-800 text-sm">{member.name}</h4>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 flex items-center gap-1">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                               <Shield size={10} /> {member.role}
                             </span>
                           </div>
-                          <p className="text-xs font-semibold text-slate-400">
-                            {hasPassword ? "Password: ••••" : "Tanpa Password Personal"}
+                          <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                            <Key size={12} className="text-emerald-600" />
+                            <span>
+                              {isAdmin 
+                                ? `Kata Sandi: ${member.password || member.pin || 'Bawaan role (' + (member.role === 'Tim Inti' ? '123456' : member.role === 'Tim Kreatif' ? '222222' : '333333') + ')'}` 
+                                : (hasPassword ? "Password: ••••" : "Password Personal Terpasang")}
+                            </span>
                           </p>
                         </>
                       )}
@@ -135,10 +140,14 @@ export default function MembersContent() {
                   {isAdmin ? (
                     <div className="flex items-center gap-1 text-slate-400">
                       <button onClick={() => {
-                        const newPassword = Math.random().toString(36).substring(2, 8).toUpperCase();
-                        saveMember({ ...member, password: newPassword });
-                        alert(`Password baru untuk ${member.name} adalah: ${newPassword}`);
-                      }} className="p-1.5 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-colors cursor-pointer" title="Generate Password Baru"><Key size={14}/></button>
+                        const currentPass = member.password || member.pin || "";
+                        const custom = window.prompt(`Atur kata sandi untuk ${member.name}:\n(Ketik kata sandi baru, atau klik OK dalam keadaan kosong untuk buat otomatis)`, currentPass);
+                        if (custom !== null) {
+                          const finalPass = custom.trim() ? custom.trim() : Math.random().toString(36).substring(2, 8).toUpperCase();
+                          saveMember({ ...member, password: finalPass });
+                          alert(`Kata sandi untuk ${member.name} berhasil disimpan:\n"${finalPass}"\n\nSilakan berikan nama pengguna dan kata sandi ini kepada yang bersangkutan.`);
+                        }
+                      }} className="p-1.5 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors cursor-pointer" title="Atur / Buatkan Kata Sandi"><Key size={14}/></button>
                       <button onMouseDown={(e) => {
                         e.preventDefault();
                         if (isEditing) {

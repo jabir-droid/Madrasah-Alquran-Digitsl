@@ -216,6 +216,10 @@ export interface AppState {
 interface AppContextType {
   data: AppState;
   currentUser: CurrentUser;
+  isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  login: (name: string, password: string) => { success: boolean; message?: string; user?: CurrentUser };
+  logout: () => void;
   isAdminVerified: boolean;
   isAdminModalOpen: boolean;
   authModalTargetRole: UserRole | null;
@@ -257,9 +261,11 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppState>(dbData as unknown as AppState);
-  // Default to Admin Nu'man
+  // Default user
   const [currentUser, setCurrentUser] = useState<CurrentUser>(PRESET_USERS[0]);
-  const [isAdminVerified, setIsAdminVerified] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [authModalTargetRole, setAuthModalTargetRole] = useState<UserRole | null>(null);
   const [authModalTargetMemberId, setAuthModalTargetMemberId] = useState<string | null>(null);
@@ -267,7 +273,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "error">("synced");
 
   useEffect(() => {
-    // Restore User Role & Admin Auth State
+    // Restore User Role & Auth State
     try {
       // 1. Purge any stale Faruq cache completely
       const rawUser = localStorage.getItem("mqd_current_user");
@@ -277,14 +283,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("mqd_user_profile_u_faruq");
       localStorage.removeItem("mqd_pin_u_faruq");
 
-      const savedUser = localStorage.getItem("mqd_current_user");
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (parsed && parsed.id && parsed.id !== "u_faruq") {
-          const memberMatch = data.members.find(m => m.id === parsed.id);
+      // Check auth session
+      const authSessionRaw = localStorage.getItem("mqd_auth_session");
+      if (authSessionRaw) {
+        const session = JSON.parse(authSessionRaw);
+        if (session && (session.id || session.name)) {
+          const memberMatch = data.members.find(
+            m => m.id === session.id || (session.name && m.name.toLowerCase() === session.name.toLowerCase())
+          );
           if (memberMatch) {
             const u = memberToCurrentUser(memberMatch);
             setCurrentUser(u);
+            setIsAuthenticated(true);
             if (u.role === "admin") {
               setIsAdminVerified(true);
               localStorage.setItem("mqd_admin_verified", "true");
@@ -292,20 +302,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               setIsAdminVerified(false);
               localStorage.removeItem("mqd_admin_verified");
             }
+            setIsAuthLoading(false);
             return;
           }
         }
       }
 
-      // Default fallback ALWAYS to Nu'man (Admin Utama)
-      const numanMember = data.members.find(m => m.id === "u_numan") || PRESET_USERS[0];
-      const u = memberToCurrentUser(numanMember);
-      setCurrentUser(u);
-      setIsAdminVerified(true);
-      localStorage.setItem("mqd_admin_verified", "true");
-      localStorage.setItem("mqd_current_user", JSON.stringify(u));
+      // No active session found - must login first
+      setIsAuthenticated(false);
+      setIsAdminVerified(false);
     } catch (e) {
       console.error(e);
+      setIsAuthenticated(false);
+    } finally {
+      setIsAuthLoading(false);
     }
   }, [data.members]);
 
@@ -514,6 +524,97 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("mqd_current_user", JSON.stringify(fallbackUser));
       } catch (e) {}
     }
+  };
+
+  const login = (name: string, password: string): { success: boolean; message?: string; user?: CurrentUser } => {
+    const trimmedName = name.trim();
+    const trimmedPass = password.trim();
+
+    if (!trimmedName) {
+      return { success: false, message: "Silakan masukkan nama pengguna Anda." };
+    }
+    if (!trimmedPass) {
+      return { success: false, message: "Silakan masukkan kata sandi Anda." };
+    }
+
+    // Match member in data.members
+    const memberMatch = data.members.find(
+      m => m.name.toLowerCase() === trimmedName.toLowerCase() || 
+           m.id.toLowerCase() === trimmedName.toLowerCase() ||
+           (m.fullName && m.fullName.toLowerCase() === trimmedName.toLowerCase())
+    );
+
+    if (!memberMatch) {
+      return { 
+        success: false, 
+        message: `Nama "${trimmedName}" belum terdaftar. Akun dibuatkan langsung oleh Admin Madrasah. Silakan hubungi Admin untuk dibuatkan akun dan role peran Anda.` 
+      };
+    }
+
+    // Check credentials
+    const roleCat = getMemberRoleCategory(memberMatch);
+    const validPinsOrPasswords = [
+      memberMatch.password ? String(memberMatch.password) : null,
+      memberMatch.pin ? String(memberMatch.pin) : null,
+      typeof window !== "undefined" ? localStorage.getItem(`mqd_pin_${memberMatch.id}`) : null,
+      DEFAULT_ROLE_PINS[roleCat],
+      roleCat === "admin" ? "123456" : null,
+      roleCat === "admin" ? "Numan.99" : null,
+    ].filter(Boolean) as string[];
+
+    const isMatch = validPinsOrPasswords.some(
+      valid => valid.toLowerCase() === trimmedPass.toLowerCase()
+    );
+
+    if (!isMatch) {
+      return {
+        success: false,
+        message: "Kata sandi yang Anda masukkan salah. Silakan periksa kembali atau minta bantuan Admin untuk reset sandi."
+      };
+    }
+
+    const u = memberToCurrentUser(memberMatch);
+    setCurrentUser(u);
+    setIsAuthenticated(true);
+    const isAdmin = u.role === "admin";
+    setIsAdminVerified(isAdmin);
+
+    try {
+      localStorage.setItem("mqd_auth_session", JSON.stringify({
+        id: memberMatch.id,
+        name: memberMatch.name,
+        role: memberMatch.role,
+        timestamp: Date.now()
+      }));
+      localStorage.setItem("mqd_current_user", JSON.stringify(u));
+      if (isAdmin) {
+        localStorage.setItem("mqd_admin_verified", "true");
+      } else {
+        localStorage.removeItem("mqd_admin_verified");
+      }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("mqd_profile_updated"));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return { success: true, user: u };
+  };
+
+  const logout = () => {
+    try {
+      localStorage.removeItem("mqd_auth_session");
+      localStorage.removeItem("mqd_current_user");
+      localStorage.removeItem("mqd_admin_verified");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("mqd_profile_updated"));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsAuthenticated(false);
+    setIsAdminVerified(false);
   };
 
   const switchUser = (roleOrMemberId: string) => {
@@ -873,6 +974,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{ 
       data, 
       currentUser,
+      isAuthenticated,
+      isAuthLoading,
+      login,
+      logout,
       isAdminVerified,
       isAdminModalOpen,
       authModalTargetRole,

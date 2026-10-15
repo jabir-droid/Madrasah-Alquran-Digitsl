@@ -22,7 +22,7 @@ export default function Sidebar({
   isMobileOpen,
   setIsMobileOpen
 }: SidebarProps) {
-  const { data } = useAppContext();
+  const { data, currentUser, logout } = useAppContext();
 
   // Real-time unread notification count
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
@@ -161,13 +161,35 @@ export default function Sidebar({
 
         {/* Bottom Section: Permanent Tombol Keluar & Status Cloud Sync */}
         <div className="p-3 border-t border-slate-800/80 bg-[#0b1320] flex flex-col gap-2">
+          {/* User Profile Info Card */}
+          <div className="p-2.5 rounded-xl bg-[#131d2e] border border-slate-700/60 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={`w-7 h-7 rounded-lg ${currentUser.avatarBg || 'bg-emerald-600'} text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-2xs`}>
+                {currentUser.initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-white truncate leading-tight">
+                  {currentUser.name}
+                </p>
+                <p className="text-[10px] text-emerald-400 truncate font-medium">
+                  {currentUser.role === "admin" ? "Admin" : currentUser.role === "kreatif" ? "Tim Kreatif" : "Guru"}
+                </p>
+              </div>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="Aktif" />
+          </div>
+
           {/* Action Pill "Keluar" */}
           <button
-            onClick={() => setActiveTab('dashboard')}
-            title="Keluar"
-            className="w-full bg-[#131d2e] hover:bg-[#1a263c] text-slate-300 hover:text-white rounded-xl p-2.5 border border-slate-700/50 shadow-xs flex items-center gap-3 cursor-pointer transition-all duration-200 group"
+            onClick={() => {
+              if (window.confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
+                logout();
+              }
+            }}
+            title="Keluar dari akun"
+            className="w-full bg-[#131d2e] hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 rounded-xl p-2.5 border border-slate-700/50 hover:border-rose-800/60 shadow-xs flex items-center gap-3 cursor-pointer transition-all duration-200 group"
           >
-            <span className="shrink-0 flex items-center justify-center w-5 text-slate-400 group-hover:text-white group-hover:scale-110 transition-transform">
+            <span className="shrink-0 flex items-center justify-center w-5 text-slate-400 group-hover:text-rose-400 group-hover:scale-110 transition-transform">
               <LogOut size={17} />
             </span>
             <span className="truncate text-[13px] font-bold whitespace-nowrap">

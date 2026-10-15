@@ -1,4 +1,4 @@
-import { Bell, HelpCircle, Menu, Settings, ChevronDown, Check, Shield, Sparkles, BookOpen, User, Clock, Calendar, ShieldCheck, Layers, Lock, Key } from "lucide-react";
+import { Bell, HelpCircle, Menu, Settings, ChevronDown, Check, Shield, Sparkles, BookOpen, User, Clock, Calendar, ShieldCheck, Layers, Lock, Key, LogOut } from "lucide-react";
 import { useAppContext, PRESET_USERS, UserRole, getMemberRoleCategory } from "@/context/AppContext";
 import { useState, useRef, useEffect } from "react";
 import { getMemberAvatar } from "@/utils/avatar";
@@ -15,6 +15,7 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
     data,
     currentUser, 
     switchUser, 
+    logout,
     syncStatus, 
     syncNow,
     isAdminVerified,
@@ -559,6 +560,19 @@ export default function Header({ activeTab, setActiveTab, onOpenGuide, onToggleS
                     <span>Masuk sebagai Admin (PIN)</span>
                   </button>
                 )}
+
+                <button
+                  onClick={() => {
+                    setShowRoleMenu(false);
+                    if (window.confirm("Yakin ingin keluar dari akun?")) {
+                      logout();
+                    }
+                  }}
+                  className="w-full text-center py-2 px-3 rounded-xl text-xs font-bold text-slate-600 hover:text-rose-600 hover:bg-rose-50/70 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <LogOut size={12} />
+                  <span>Keluar / Ganti Akun</span>
+                </button>
               </div>
             </div>
           )}
